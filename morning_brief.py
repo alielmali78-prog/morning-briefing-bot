@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 from datetime import datetime
+import os
 import random
 import feedparser
 import requests
 
-TOKEN = "YourToken"
-CHAT_ID = "your ID"
+TOKEN = os.getenv("TG_TOKEN")
+CHAT_ID = os.getenv("TG_CHAT_ID")
 
+if not TOKEN or not CHAT_ID:
+    raise RuntimeError("TG_TOKEN veya TG_CHAT_ID tanımlı değil")
 # --- HAVA DURUMU (Open-Meteo - API key yok) ---
 def get_weather():
     try:
