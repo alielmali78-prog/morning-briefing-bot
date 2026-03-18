@@ -5,7 +5,7 @@ import feedparser
 import requests
 
 TOKEN = "YourToken"
-CHAT_ID = "8631013380"
+CHAT_ID = "your ID"
 
 # --- HAVA DURUMU (Open-Meteo - API key yok) ---
 def get_weather():
