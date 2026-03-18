@@ -4,7 +4,7 @@ import random
 import feedparser
 import requests
 
-TOKEN = "8443682847:AAEhnN_FdSM6C83sO1_bzxfsvvkl89SDjzU"
+TOKEN = "YourToken"
 CHAT_ID = "8631013380"
 
 # --- HAVA DURUMU (Open-Meteo - API key yok) ---
