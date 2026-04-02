@@ -29,6 +29,43 @@ TOTAL_AYAHS = 6236
 
 
 # ---------------- YARDIMCI ----------------
+
+AI_LIMIT_FILE = Path.home() / ".morning_brief_ai_usage"
+
+def can_use_ai():
+    from datetime import datetime
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    try:
+        if AI_LIMIT_FILE.exists():
+            data = AI_LIMIT_FILE.read_text().split("|")
+            if len(data) == 2:
+                date, count = data
+                if date == today:
+                    return int(count) < 2
+    except:
+        pass
+
+    return True
+
+def register_ai_call():
+    from datetime import datetime
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    try:
+        if AI_LIMIT_FILE.exists():
+            data = AI_LIMIT_FILE.read_text().split("|")
+            if len(data) == 2 and data[0] == today:
+                count = int(data[1]) + 1
+            else:
+                count = 1
+        else:
+            count = 1
+
+        AI_LIMIT_FILE.write_text(f"{today}|{count}")
+    except:
+        pass
+
 def safe_openai_text_response(response_json):
     try:
         return response_json["output"][0]["content"][0]["text"].strip()
@@ -52,6 +89,34 @@ def save_json_file(path: Path, data):
         pass
 
 
+
+def build_smart_exec_fallback(news):
+    headlines = news.get("global", []) + news.get("business", []) + news.get("technology", [])
+    full = " ".join(headlines).lower()
+
+    if any(k in full for k in ["war", "iran", "attack", "strike", "crisis"]):
+        theme = "Jeopolitik riskler teknoloji ve piyasaları doğrudan etkiliyor."
+        risk = "Reaktif karar alma ve enerji maliyetleri."
+        opp = "Belirsizlik dönemlerinde doğru pozisyon avantaj yaratır."
+    elif any(k in full for k in ["ai", "cloud", "chip", "data"]):
+        theme = "AI ve cloud yatırımları rekabetin merkezinde."
+        risk = "Yanlış yatırım dağılımı."
+        opp = "Verimlilik ve ölçeklenebilirlik avantajı."
+    else:
+        theme = "Makro ve teknoloji dengesi birlikte ilerliyor."
+        risk = "Odak kaybı."
+        opp = "Operasyonel verimlilik."
+
+    return (
+        f"Ana tema: {theme}\n"
+        f"Risk: {risk}\n"
+        f"Fırsat: {opp}\n"
+        f"Ali için bugün:\n"
+        f"- Yap: Gündemi sadeleştir ve 1 ana hedef seç.\n"
+        f"- Dikkat et: Gereksiz işlere dağılma.\n"
+        f"- İzle: AI + cloud + piyasa kesişimi."
+    )
+
 # ---------------- AI INSIGHT ----------------
 def generate_ai_insight(news):
     fallback = (
@@ -66,8 +131,8 @@ def generate_ai_insight(news):
 
     try:
         api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            return fallback
+        if not api_key or not can_use_ai():
+            return build_smart_exec_fallback(news)
 
         headlines = news.get("global", []) + news.get("business", []) + news.get("technology", [])
 
@@ -119,32 +184,97 @@ Kurallar:
 
         data = response.json()
         text = safe_openai_text_response(data)
+        register_ai_call()
         return text if text else fallback
 
     except Exception:
         return fallback
 
 
+
+def build_smart_aein_fallback(news):
+    headlines = news.get("global", []) + news.get("business", []) + news.get("technology", [])
+    full_text = " ".join(headlines).lower()
+
+    revenue = 5
+    execution = 7
+    strategic = 5
+    urgency = 5
+
+    revenue_keywords = ["ipo", "valuation", "investment", "revenue", "market", "growth", "business", "deal"]
+    strategic_keywords = ["ai", "cloud", "chip", "data", "automation", "platform", "technology"]
+    urgent_keywords = ["war", "strike", "attack", "fires", "warning", "live updates", "crisis", "iran", "tehran"]
+    difficulty_keywords = ["tariff", "sanction", "regulation", "warning", "crisis", "conflict", "pharmaceutical"]
+
+    for k in revenue_keywords:
+        if k in full_text:
+            revenue += 1
+
+    for k in strategic_keywords:
+        if k in full_text:
+            strategic += 1
+
+    for k in urgent_keywords:
+        if k in full_text:
+            urgency += 1
+
+    for k in difficulty_keywords:
+        if k in full_text:
+            execution -= 1
+
+    revenue = max(4, min(revenue, 9))
+    execution = max(3, min(execution, 9))
+    strategic = max(4, min(strategic, 10))
+    urgency = max(4, min(urgency, 10))
+
+    if urgency >= 8:
+        theme = "Jeopolitik baskı ile teknoloji ve piyasa gündemi aynı anda yönetiliyor."
+        risk = "Dikkatin dağılması ve reaktif karar alma riski artıyor."
+    elif strategic >= 8:
+        theme = "Teknoloji eksenli gündem stratejik pozisyon almayı öne çıkarıyor."
+        risk = "Yanlış önceliklendirme yüzünden fırsat penceresi kaçabilir."
+    else:
+        theme = "Makro baskılar ve iş gündemi birlikte okunmalı."
+        risk = "Parçalı gündem odak kaybı yaratabilir."
+
+    if strategic >= 8 and revenue >= 7:
+        opp = "AI, cloud ve platform alanında ticari ve stratejik fırsat birlikte oluşuyor."
+    elif revenue >= 7:
+        opp = "Piyasa hareketliliği yeni gelir ve teklif fırsatları yaratabilir."
+    else:
+        opp = "Operasyon verimliliği ve odaklı execution ile avantaj yaratılabilir."
+
+    if urgency >= 8:
+        advice = "Bugün haberleri izlemek yerine risk ve öncelik filtresiyle sadeleştir."
+        decision = "Tek kritik karar alanını seç, diğer tüm konuları ikinci plana al."
+    elif strategic >= 8:
+        advice = "AI ve cloud başlıklarını doğrudan iş sonucu üreten alanlarla eşleştir."
+        decision = "Bugün stratejik uyumu yüksek tek bir başlığı somut aksiyona çevir."
+    else:
+        advice = "Gelir, delivery ve stratejik uyum filtresiyle gündemi daralt."
+        decision = "Bugün en yüksek iş etkisi olan tek konuyu ilerlet."
+
+    return (
+        f"Ana tema: {theme}\n"
+        f"Risk: {risk}\n"
+        f"Fırsat: {opp}\n"
+        f"\nScore:\n"
+        f"- Revenue Impact: {revenue}/10\n"
+        f"- Execution Ease: {execution}/10\n"
+        f"- Strategic Fit: {strategic}/10\n"
+        f"- Urgency: {urgency}/10\n"
+        f"\nÖneri: {advice}\n"
+        f"Karar: {decision}"
+    )
+
+
 # ---------------- AEIN DECISION ENGINE ----------------
 def generate_aein_decision(news):
-    fallback = (
-        "Ana tema: Piyasa baskısı ile teknoloji dönüşümü aynı anda ilerliyor.\n"
-        "Risk: Dağınık öncelikler yüzünden enerji ve odak kaybı.\n"
-        "Fırsat: AI, cloud ve operasyon verimliliğini birlikte ele alan servisler.\n"
-        "\n"
-        "Score:\n"
-        "- Revenue Impact: 7/10\n"
-        "- Execution Ease: 6/10\n"
-        "- Strategic Fit: 8/10\n"
-        "- Urgency: 7/10\n"
-        "\n"
-        "Öneri: Gündemi gelir, delivery ve ölçeklenebilirlik filtresiyle değerlendir.\n"
-        "Karar: Bugün sadece iş sonucu üretecek 1 kritik konuya odaklan."
-    )
+    fallback = build_smart_aein_fallback(news)
 
     try:
         api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
+        if not api_key or not can_use_ai():
             return fallback
 
         headlines = news.get("global", []) + news.get("business", []) + news.get("technology", [])
@@ -205,11 +335,38 @@ Kurallar:
 
         data = response.json()
         text = safe_openai_text_response(data)
+        register_ai_call()
         return text if text else fallback
 
     except Exception:
         return fallback
 
+
+
+def build_smart_english(news):
+    headlines = " ".join(news.get("global", []) + news.get("technology", [])).lower()
+
+    if "ai" in headlines or "cloud" in headlines:
+        return (
+            "Phrasal verb: scale up — ölçek büyütmek\n"
+            "Idiom: stay ahead of the curve — trendin önünde olmak\n"
+            "Business expression: digital transformation — dijital dönüşüm\n"
+            "Example: Companies must scale up AI capabilities to stay ahead of the curve."
+        )
+    elif "war" in headlines or "crisis" in headlines:
+        return (
+            "Phrasal verb: brace for — hazırlanmak\n"
+            "Idiom: in troubled waters — zor durumda\n"
+            "Business expression: risk management — risk yönetimi\n"
+            "Example: Firms must brace for uncertainty in troubled waters."
+        )
+    else:
+        return (
+            "Phrasal verb: move forward — ilerlemek\n"
+            "Idiom: keep the momentum — ivmeyi korumak\n"
+            "Business expression: operational efficiency — operasyonel verimlilik\n"
+            "Example: Teams must move forward while keeping the momentum."
+        )
 
 # ---------------- AI ENGLISH BOOSTER ----------------
 ENGLISH_FALLBACKS = [
@@ -251,8 +408,8 @@ def generate_english_booster(news):
 
     try:
         api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            return fallback_text
+        if not api_key or not can_use_ai():
+            return build_smart_english(news)
 
         headlines = news.get("global", []) + news.get("business", []) + news.get("technology", [])
 
@@ -295,6 +452,7 @@ Kurallar:
 
         data = response.json()
         text = safe_openai_text_response(data)
+        register_ai_call()
         return text if text else fallback_text
 
     except Exception:
@@ -315,7 +473,7 @@ def generate_speaking_prompt(news):
 
     try:
         api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
+        if not api_key or not can_use_ai():
             return fallback
 
         headlines = news.get("global", []) + news.get("technology", [])
@@ -353,6 +511,7 @@ Rules:
 
         data = response.json()
         text = safe_openai_text_response(data)
+        register_ai_call()
         return text if text else fallback
 
     except Exception:
@@ -516,7 +675,7 @@ def generate_book_recommendation(news):
 
     try:
         api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
+        if not api_key or not can_use_ai():
             return fallback_book, fallback_reason
 
         recent_books = get_recent_books()
@@ -632,7 +791,7 @@ def generate_poem_line(news):
 
     try:
         api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
+        if not api_key or not can_use_ai():
             return fallback
 
         recent_poems = get_recent_poems()
@@ -708,6 +867,47 @@ def bullets(items):
     return "\n".join([f"- {item}" for item in items])
 
 
+
+def build_top_priority_from_scores(aein_text):
+    import re
+
+    lower = aein_text.lower()
+
+    scores = {
+        "revenue": 5,
+        "execution": 5,
+        "strategic": 5,
+        "urgency": 5,
+    }
+
+    patterns = {
+        "revenue": r"Revenue Impact:\s*(\d+)/10",
+        "execution": r"Execution Ease:\s*(\d+)/10",
+        "strategic": r"Strategic Fit:\s*(\d+)/10",
+        "urgency": r"Urgency:\s*(\d+)/10",
+    }
+
+    for key, pattern in patterns.items():
+        m = re.search(pattern, aein_text, flags=re.I)
+        if m:
+            scores[key] = int(m.group(1))
+
+    priority_score = scores["revenue"] + scores["strategic"] + scores["urgency"] - (10 - scores["execution"])
+
+    if scores["urgency"] >= 8:
+        focus = "Risk ve öncelik sadeleştirmesine odaklan; tek kritik işi öne al."
+    elif scores["strategic"] >= 8 and scores["revenue"] >= 7:
+        focus = "Stratejik uyumu ve gelir etkisi yüksek tek AI/cloud başlığını somut aksiyona çevir."
+    elif scores["revenue"] >= 8:
+        focus = "Gelir etkisi yüksek fırsatları öne al; delivery gücünü zorlamadan ilerle."
+    elif scores["execution"] >= 8:
+        focus = "Hızlı kazanım sağlayacak, uygulanması kolay tek işi bugün tamamla."
+    else:
+        focus = "Dağılmadan, stratejik uyumu en yüksek tek konuya odaklan."
+
+    return f"Priority Score: {priority_score}/30\n🔥 Top Priority: {focus}"
+
+
 # ---------------- ANA İÇERİK ----------------
 def build_sabah_rutini(news, weather):
     global_news = news.get("global", [])[:3]
@@ -719,6 +919,7 @@ def build_sabah_rutini(news, weather):
     poem_text = generate_poem_line(news)
     ai_text = generate_ai_insight(news)
     aein_text = generate_aein_decision(news)
+    top_priority = build_top_priority_from_scores(aein_text)
     english_text = generate_english_booster(news)
     speaking = generate_speaking_prompt(news)
 
@@ -769,6 +970,10 @@ def build_sabah_rutini(news, weather):
     msg.append("")
     msg.append("*🧠 AEIN Decision Engine*")
     msg.append(aein_text)
+
+    msg.append("")
+    msg.append("*🔥 Top Priority*")
+    msg.append(top_priority)
 
     msg.append("")
     msg.append("*🧠 Executive Insight*")
