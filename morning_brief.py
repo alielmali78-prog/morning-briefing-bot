@@ -17,6 +17,7 @@ if not TOKEN or not CHAT_ID:
 # ---------------- DOSYA YOLLARI ----------------
 QURAN_STATE_FILE = Path.home() / ".morning_brief_quran_state"
 BOOK_STATE_FILE = Path.home() / ".morning_brief_book_state"
+POEM_STATE_FILE = Path.home() / ".morning_brief_poem_state"
 
 QURAN_API_BASE = "https://api.alquran.cloud/v1"
 QURAN_EDITIONS = [
@@ -98,6 +99,77 @@ Kurallar:
 - Yönetici dili kullan
 - Haberleri tek tek tekrar etme
 - Ali için somut öneri ver
+"""
+
+        response = requests.post(
+            "https://api.openai.com/v1/responses",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "gpt-4.1-mini",
+                "input": prompt,
+            },
+            timeout=20,
+        )
+
+        if response.status_code != 200:
+            return fallback
+
+        data = response.json()
+        text = safe_openai_text_response(data)
+        return text if text else fallback
+
+    except Exception:
+        return fallback
+
+
+# ---------------- AEIN DECISION ENGINE ----------------
+def generate_aein_decision(news):
+    fallback = (
+        "Ana tema: Piyasa baskısı ile teknoloji dönüşümü aynı anda ilerliyor.\n"
+        "Risk: Dağınık öncelikler yüzünden enerji ve odak kaybı.\n"
+        "Fırsat: AI, cloud ve operasyon verimliliğini birlikte ele alan servisler.\n"
+        "Öneri: Gündemi gelir, delivery ve ölçeklenebilirlik filtresiyle değerlendir.\n"
+        "Karar: Bugün sadece iş sonucu üretecek 1 kritik konuya odaklan."
+    )
+
+    try:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            return fallback
+
+        headlines = news.get("global", []) + news.get("business", []) + news.get("technology", [])
+
+        prompt = f"""
+Sen AEIN v21 mantığıyla çalışan bir executive decision engine'sin.
+
+Ali'nin karar filtresi:
+- gelir getiriyor mu?
+- delivery gücünü artırıyor mu?
+- ölçeklenebilir modele katkı sağlıyor mu?
+- stratejik pozisyonu güçlendiriyor mu?
+- zaman / enerji / para maliyetine değiyor mu?
+
+Aşağıdaki haber başlıklarını bu mantıkla değerlendir:
+
+{headlines}
+
+Türkçe yaz.
+Çıktı tam olarak şu formatta olsun:
+
+Ana tema:
+Risk:
+Fırsat:
+Öneri:
+Karar:
+
+Kurallar:
+- kısa ve net yaz
+- haber başlıklarını tekrar etme
+- yönetici dili kullan
+- karar cümlesi somut olsun
 """
 
         response = requests.post(
@@ -500,11 +572,105 @@ Kurallar:
         return fallback_book, fallback_reason
 
 
-# ---------------- ŞİİR ----------------
-POEMS = [
+# ---------------- GÜNÜN DİZESİ ----------------
+POEM_FALLBACKS = [
     "“Yaşamak bir ağaç gibi tek ve hür ve bir orman gibi kardeşçesine” – Nazım Hikmet",
     "“Ben sana mecburum bilemezsin” – Attila İlhan",
+    "“Ne içindeyim zamanın, ne de büsbütün dışında” – Ahmet Hamdi Tanpınar",
+    "“Göğe bakalım” – Turgut Uyar",
+    "“İnsan yaşadığı yere benzer” – Edip Cansever",
+    "“Bir umuttur yaşatan insanı” – Nazım Hikmet",
+    "“Aldırma gönül aldırma” – Sabahattin Ali",
+    "“En uzak mesafe ne Afrika’dır ne Çin” – Cemal Süreya",
+    "“Sevmek, kimi zaman rezilce korkudur” – Attila İlhan",
+    "“Her şey sende gizli” – Sıtkı Erinç",
 ]
+
+
+def get_recent_poems():
+    state = load_json_file(POEM_STATE_FILE, {"recent": []})
+    recent = state.get("recent", [])
+    return recent if isinstance(recent, list) else []
+
+
+def save_recent_poem(poem_text):
+    recent = get_recent_poems()
+    updated = [poem_text] + [p for p in recent if p != poem_text]
+    updated = updated[:10]
+    save_json_file(POEM_STATE_FILE, {"recent": updated})
+
+
+def choose_fallback_poem():
+    recent = set(get_recent_poems())
+    filtered = [p for p in POEM_FALLBACKS if p not in recent]
+
+    if not filtered:
+        filtered = POEM_FALLBACKS[:]
+
+    chosen = random.choice(filtered)
+    save_recent_poem(chosen)
+    return chosen
+
+
+def generate_poem_line(news):
+    fallback = choose_fallback_poem()
+
+    try:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            return fallback
+
+        recent_poems = get_recent_poems()
+        headlines = news.get("global", []) + news.get("technology", []) + news.get("business", [])
+
+        prompt = f"""
+Ali için kısa ve güçlü bir günün dizesi öner.
+
+Bağlam:
+{headlines}
+
+Son günlerde kullanılan dizeler:
+{recent_poems}
+
+Kurallar:
+- Türkçe yaz
+- Tek satır olsun
+- Şair adıyla birlikte ver
+- Kısa, güçlü, sabah rutini tonuna uygun olsun
+- Fazla melankolik olmasın
+- Son kullanılanları tekrar etme
+- Format:
+“<dize>” – <şair>
+"""
+
+        response = requests.post(
+            "https://api.openai.com/v1/responses",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "gpt-4.1-mini",
+                "input": prompt,
+            },
+            timeout=20,
+        )
+
+        if response.status_code != 200:
+            return fallback
+
+        data = response.json()
+        text = safe_openai_text_response(data)
+
+        if not text:
+            return fallback
+
+        poem = text.strip()
+        save_recent_poem(poem)
+        return poem
+
+    except Exception:
+        return fallback
 
 
 # ---------------- HABER ----------------
@@ -535,7 +701,9 @@ def build_sabah_rutini(news, weather):
 
     ayet = get_daily_ayah()
     book_title, book_reason = generate_book_recommendation(news)
+    poem_text = generate_poem_line(news)
     ai_text = generate_ai_insight(news)
+    aein_text = generate_aein_decision(news)
     english_text = generate_english_booster(news)
     speaking = generate_speaking_prompt(news)
 
@@ -578,11 +746,14 @@ def build_sabah_rutini(news, weather):
     msg.append("*7) Kitap Önerisi*")
     msg.append(book_title)
     msg.append(book_reason)
+    msg.append("")
 
-    if random.random() > 0.5:
-        msg.append("")
-        msg.append("*Ek: Günün Dizesi*")
-        msg.append(random.choice(POEMS))
+    msg.append("*8) Günün Dizesi*")
+    msg.append(poem_text)
+
+    msg.append("")
+    msg.append("*🧠 AEIN Decision Engine*")
+    msg.append(aein_text)
 
     msg.append("")
     msg.append("*🧠 Executive Insight*")
