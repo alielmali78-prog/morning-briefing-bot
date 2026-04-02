@@ -131,6 +131,13 @@ def generate_aein_decision(news):
         "Ana tema: Piyasa baskısı ile teknoloji dönüşümü aynı anda ilerliyor.\n"
         "Risk: Dağınık öncelikler yüzünden enerji ve odak kaybı.\n"
         "Fırsat: AI, cloud ve operasyon verimliliğini birlikte ele alan servisler.\n"
+        "\n"
+        "Score:\n"
+        "- Revenue Impact: 7/10\n"
+        "- Execution Ease: 6/10\n"
+        "- Strategic Fit: 8/10\n"
+        "- Urgency: 7/10\n"
+        "\n"
         "Öneri: Gündemi gelir, delivery ve ölçeklenebilirlik filtresiyle değerlendir.\n"
         "Karar: Bugün sadece iş sonucu üretecek 1 kritik konuya odaklan."
     )
@@ -157,19 +164,27 @@ Aşağıdaki haber başlıklarını bu mantıkla değerlendir:
 {headlines}
 
 Türkçe yaz.
-Çıktı tam olarak şu formatta olsun:
+
+Çıktı formatı:
 
 Ana tema:
 Risk:
 Fırsat:
+
+Score:
+- Revenue Impact: X/10
+- Execution Ease: X/10
+- Strategic Fit: X/10
+- Urgency: X/10
+
 Öneri:
 Karar:
 
 Kurallar:
 - kısa ve net yaz
+- sayılar gerçekçi olsun
+- karar cümlesi somut ve aksiyon içersin
 - haber başlıklarını tekrar etme
-- yönetici dili kullan
-- karar cümlesi somut olsun
 """
 
         response = requests.post(
