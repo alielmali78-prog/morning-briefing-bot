@@ -908,6 +908,38 @@ def build_top_priority_from_scores(aein_text):
     return f"Priority Score: {priority_score}/30\n🔥 Top Priority: {focus}"
 
 
+
+def build_action_engine(aein_text, top_priority):
+    lower = (aein_text + "\n" + top_priority).lower()
+
+    if "risk" in lower and "urgency" in lower:
+        return (
+            "- 1 kritik riski netleştir\n"
+            "- 1 acil kararı bugün kapat\n"
+            "- 1 dikkat dağıtan konuyu ertele"
+        )
+
+    if "ai" in lower or "cloud" in lower or "strategic fit" in lower:
+        return (
+            "- 1 AI/cloud fırsatını seç\n"
+            "- 1 somut use-case veya aksiyon tanımla\n"
+            "- 1 gereksiz gündemi bugünden çıkar"
+        )
+
+    if "revenue" in lower:
+        return (
+            "- 1 gelir etkisi yüksek fırsatı öne al\n"
+            "- 1 müşteri / teklif / çıktı başlığını ilerlet\n"
+            "- 1 düşük getirili işi ertele"
+        )
+
+    return (
+        "- 1 ana odağı seç\n"
+        "- 1 somut aksiyonu bugün tamamla\n"
+        "- 1 dikkat dağıtan işi ertele"
+    )
+
+
 # ---------------- ANA İÇERİK ----------------
 def build_sabah_rutini(news, weather):
     global_news = news.get("global", [])[:3]
@@ -920,6 +952,7 @@ def build_sabah_rutini(news, weather):
     ai_text = generate_ai_insight(news)
     aein_text = generate_aein_decision(news)
     top_priority = build_top_priority_from_scores(aein_text)
+    action_engine = build_action_engine(aein_text, top_priority)
     english_text = generate_english_booster(news)
     speaking = generate_speaking_prompt(news)
 
@@ -974,6 +1007,10 @@ def build_sabah_rutini(news, weather):
     msg.append("")
     msg.append("*🔥 Top Priority*")
     msg.append(top_priority)
+
+    msg.append("")
+    msg.append("*⚡ Action Engine*")
+    msg.append(action_engine)
 
     msg.append("")
     msg.append("*🧠 Executive Insight*")
