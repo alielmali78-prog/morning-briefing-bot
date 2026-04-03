@@ -868,10 +868,9 @@ def bullets(items):
 
 
 
+
 def build_top_priority_from_scores(aein_text):
     import re
-
-    lower = aein_text.lower()
 
     scores = {
         "revenue": 5,
@@ -892,7 +891,8 @@ def build_top_priority_from_scores(aein_text):
         if m:
             scores[key] = int(m.group(1))
 
-    priority_score = scores["revenue"] + scores["strategic"] + scores["urgency"] - (10 - scores["execution"])
+    score = scores["revenue"] + scores["strategic"] + scores["urgency"] - (10 - scores["execution"])
+    level = map_priority_level(score)
 
     if scores["urgency"] >= 8:
         focus = "Risk ve öncelik sadeleştirmesine odaklan; tek kritik işi öne al."
@@ -905,9 +905,7 @@ def build_top_priority_from_scores(aein_text):
     else:
         focus = "Dağılmadan, stratejik uyumu en yüksek tek konuya odaklan."
 
-    return f"Priority Score: {priority_score}/30\n🔥 Top Priority: {focus}"
-
-
+    return f"Priority Score: {score}\nPriority Level: {level}\n🔥 Top Priority: {focus}"
 
 def build_action_engine(aein_text, top_priority):
     lower = (aein_text + "\n" + top_priority).lower()
@@ -938,6 +936,20 @@ def build_action_engine(aein_text, top_priority):
         "- 1 somut aksiyonu bugün tamamla\n"
         "- 1 dikkat dağıtan işi ertele"
     )
+
+
+
+def map_priority_level(score):
+    if score < 10:
+        return "Low"
+    elif score < 15:
+        return "Medium"
+    elif score < 20:
+        return "Medium-High"
+    elif score < 25:
+        return "High"
+    else:
+        return "Critical"
 
 
 # ---------------- ANA İÇERİK ----------------
@@ -1021,12 +1033,21 @@ def build_sabah_rutini(news, weather):
 
 # ---------------- GÖNDERİM ----------------
 def send(text):
-    response = requests.post(
-        f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-        data={"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"},
-        timeout=10
-    )
-    response.raise_for_status()
+    last_error = None
+
+    for timeout_value in (15, 30):
+        try:
+            response = requests.post(
+                f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+                data={"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"},
+                timeout=timeout_value
+            )
+            response.raise_for_status()
+            return
+        except requests.exceptions.RequestException as e:
+            last_error = e
+
+    raise last_error
 
 
 # ---------------- ÇALIŞTIR ----------------
