@@ -1,3 +1,21 @@
+# 🚀 Morning Briefing Bot
+
+> AI-powered personal decision engine for daily executive focus
+
+---
+
+## 🎯 What is this?
+
+This is not a news bot.
+
+This is a **decision system** that turns daily information into:
+
+- 📊 Insight
+- 🎯 Priority
+- ⚡ Action
+
+---
+
 # Morning Briefing Bot (Decision Engine Edition)
 
 Telegram üzerinden her sabah çalışan, **AI destekli karar ve aksiyon odaklı kişisel executive sistem**.
