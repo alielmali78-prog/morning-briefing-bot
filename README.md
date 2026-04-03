@@ -35,6 +35,23 @@ Bu sistem sadece haber göstermez.
 
 ---
 
+
+
+---
+
+## 🔥 Example Output
+
+🔥 Top Priority  
+Priority Score: 17  
+Priority Level: Medium-High  
+
+⚡ Action Engine  
+- 1 AI use-case seç  
+- 1 ekip başlat  
+- 1 gereksiz işi kes  
+
+---
+
 ## 🧠 Core Özellikler
 
 ### 📊 AEIN Decision Engine
