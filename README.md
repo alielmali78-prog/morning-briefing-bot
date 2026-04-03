@@ -69,7 +69,7 @@ The goal is to decide better and act faster.
 
 ## 🧠 Core Özellikler
 
-### 📊 AEIN Decision Engine
+### 📊 Decision Engine
 - Günün haberlerini analiz eder
 - Risk / fırsat / yön çıkarır
 - Executive seviyede özet üretir
@@ -141,7 +141,7 @@ Bu 4 parametre ile günün öncelik gücünü hesaplar
 
 1. Cron çalışır
 2. Veri toplanır
-3. AEIN analiz yapılır
+3. Decision System analiz yapılır
 4. Priority hesaplanır
 5. Top Priority belirlenir
 6. Action Engine çalışır
@@ -157,7 +157,7 @@ Information → Analysis → Decision → Action
 
 ## 🔐 Not
 
-Stratejik katman (AEIN / Brain) bilinçli olarak repo dışında tutulmaktadır.
+Stratejik katman (Decision System / Brain) bilinçli olarak repo dışında tutulmaktadır.
 
 ---
 
