@@ -86,6 +86,21 @@ Bu 4 parametre ile günün öncelik gücünü hesaplar
 
 ---
 
+
+
+---
+
+### 💡 Idea Engine
+
+Generates business and product ideas directly from cloud and platform trends.
+
+Examples:
+- Cost optimization trend → FinOps solution opportunity
+- Kubernetes adoption → Managed platform service
+- Telco cloud growth → Telco-specific PaaS opportunity
+
+Transforms information into opportunity.
+
 ### 🎯 Top Priority Engine
 - Günün tek odağını belirler
 
