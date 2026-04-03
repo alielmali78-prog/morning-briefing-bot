@@ -207,6 +207,55 @@ Information → Analysis → Decision → Action
 
 ---
 
+
+
+---
+
+## 🛣️ Future Roadmap
+
+### Phase 1 — Decision System (Completed)
+- Daily briefing automation
+- Priority scoring system
+- Action Engine
+- Cloud / Platform Radar
+- Idea Engine
+
+---
+
+### Phase 2 — Intelligence Layer
+- Idea scoring (business value, feasibility)
+- Trend clustering
+- Personalized recommendations
+- Memory-based learning (user behavior adaptation)
+
+---
+
+### Phase 3 — Productization
+- Web dashboard
+- Multi-user support
+- API layer
+- Notification channels (Slack, Email, WhatsApp)
+
+---
+
+### Phase 4 — AI Co-Pilot
+- Conversational interface
+- “What should I do today?” AI assistant
+- Strategy suggestions
+- Scenario simulation (what-if analysis)
+
+---
+
+### 🎯 Vision
+
+Transform daily information into:
+
+→ Insight  
+→ Decision  
+→ Action  
+→ Opportunity  
+
+
 ## 🔐 Not
 
 Stratejik katman (Decision System / Brain) bilinçli olarak repo dışında tutulmaktadır.
