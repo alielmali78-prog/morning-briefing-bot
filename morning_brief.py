@@ -991,11 +991,11 @@ def build_sabah_rutini(news, weather):
     msg.append(bullets(tech_news))
     msg.append("")
 
-    msg.append("*5) English Booster*")
+    msg.append("*5) English Booster (EN)*")
     msg.append(english_text)
     msg.append("")
 
-    msg.append("*🎤 Speaking Practice*")
+    msg.append("*🎤 Speaking Practice (EN)*")
     msg.append("Aşağıdaki soruya İngilizce 2-3 cümleyle cevap ver:")
     msg.append(speaking)
     msg.append("")
@@ -1013,19 +1013,19 @@ def build_sabah_rutini(news, weather):
     msg.append(poem_text)
 
     msg.append("")
-    msg.append("*🧠 AEIN Decision Engine*")
+    msg.append("*🧠 Karar Motoru*")
     msg.append(aein_text)
 
     msg.append("")
-    msg.append("*🔥 Top Priority*")
+    msg.append("*🔥 Bugünün Önceliği*")
     msg.append(top_priority)
 
     msg.append("")
-    msg.append("*⚡ Action Engine*")
+    msg.append("*⚡ Aksiyon Motoru*")
     msg.append(action_engine)
 
     msg.append("")
-    msg.append("*🧠 Executive Insight*")
+    msg.append("*🧠 Executive Insight (EN)*")
     msg.append(ai_text)
 
     return "\n".join(msg)
