@@ -52,6 +52,21 @@ Priority Level: Medium-High
 
 ---
 
+
+
+## Why This Exists
+
+Most daily information systems stop at reporting.
+
+This project exists to go one step further:
+
+- turn information into analysis
+- turn analysis into priority
+- turn priority into action
+
+The goal is not to read more.
+The goal is to decide better and act faster.
+
 ## 🧠 Core Özellikler
 
 ### 📊 AEIN Decision Engine
