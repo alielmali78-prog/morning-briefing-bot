@@ -847,6 +847,49 @@ Kurallar:
         return fallback
 
 
+
+CLOUD_PLATFORM_KEYWORDS = [
+    "cloud", "iaas", "paas", "saas", "kubernetes", "openshift",
+    "devops", "platform", "datacenter", "data center", "server",
+    "infrastructure", "infra", "virtualization", "vmware",
+    "container", "docker", "edge", "telco", "network cloud",
+    "observability", "sre", "ci/cd", "automation", "ansible"
+]
+
+def filter_cloud_platform_news(items, limit=3):
+    scored = []
+    for item in items:
+        lower = item.lower()
+        score = sum(1 for k in CLOUD_PLATFORM_KEYWORDS if k in lower)
+        if score > 0:
+            scored.append((score, item))
+
+    scored.sort(key=lambda x: (-x[0], x[1]))
+    return [item for _, item in scored[:limit]]
+
+def collect_cloud_platform_news():
+    sources = [
+        "https://news.google.com/rss/search?q=cloud+OR+IaaS+OR+PaaS+OR+SaaS+OR+Kubernetes+OR+OpenShift+OR+DevOps+OR+datacenter&hl=en-US&gl=US&ceid=US:en",
+        "https://news.google.com/rss/search?q=telco+cloud+OR+platform+engineering+OR+virtualization+OR+infrastructure&hl=en-US&gl=US&ceid=US:en",
+    ]
+
+    combined = []
+    seen = set()
+
+    for src in sources:
+        for title in get_news(src, 8):
+            if title not in seen:
+                combined.append(title)
+                seen.add(title)
+
+    filtered = filter_cloud_platform_news(combined, limit=3)
+
+    if filtered:
+        return filtered
+
+    return combined[:3]
+
+
 # ---------------- HABER ----------------
 def get_news(url, n=3):
     feed = feedparser.parse(url)
@@ -858,6 +901,7 @@ def collect_news():
         "global": get_news("https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en", 3),
         "technology": get_news("https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en", 2),
         "business": get_news("https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en", 2),
+        "cloud_platform": collect_cloud_platform_news(),
     }
 
 
@@ -956,6 +1000,7 @@ def map_priority_level(score):
 def build_sabah_rutini(news, weather):
     global_news = news.get("global", [])[:3]
     tech_news = news.get("technology", [])[:2]
+    cloud_platform_news = news.get("cloud_platform", [])[:3]
     business_news = news.get("business", [])[:2]
 
     ayet = get_daily_ayah()
@@ -987,11 +1032,15 @@ def build_sabah_rutini(news, weather):
     msg.append(bullets(business_news))
     msg.append("")
 
-    msg.append("*4) AI / Cloud Radar*")
+    msg.append("*4) ☁️ Cloud / Platform Radar*")
+    msg.append(bullets(cloud_platform_news))
+    msg.append("")
+
+    msg.append("*5) AI / Tech Radar*")
     msg.append(bullets(tech_news))
     msg.append("")
 
-    msg.append("*5) English Booster (EN)*")
+    msg.append("*6) English Booster (EN)*")
     msg.append(english_text)
     msg.append("")
 
@@ -1000,16 +1049,16 @@ def build_sabah_rutini(news, weather):
     msg.append(speaking)
     msg.append("")
 
-    msg.append("*6) Günün Ayeti*")
+    msg.append("*7) Günün Ayeti*")
     msg.append(f"{ayet[1]} ({ayet[0]})")
     msg.append("")
 
-    msg.append("*7) Kitap Önerisi*")
+    msg.append("*8) Kitap Önerisi*")
     msg.append(book_title)
     msg.append(book_reason)
     msg.append("")
 
-    msg.append("*8) Günün Dizesi*")
+    msg.append("*9) Günün Dizesi*")
     msg.append(poem_text)
 
     msg.append("")
