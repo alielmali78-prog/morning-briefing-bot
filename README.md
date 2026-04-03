@@ -1,41 +1,19 @@
-# 🚀 Morning Briefing Bot
+# PulseAI
 
-> AI-powered personal decision engine for daily executive focus
-
----
-
-## 🎯 What is this?
-
-This is not a news bot.
-
-This is a **decision system** that turns daily information into:
-
-- 📊 Insight
-- 🎯 Priority
-- ⚡ Action
+AI-powered decision & action engine
 
 ---
 
-# Morning Briefing Bot (Decision Engine Edition)
+## 🎯 What is PulseAI?
 
-Telegram üzerinden her sabah çalışan, **AI destekli karar ve aksiyon odaklı kişisel executive sistem**.
+PulseAI is not a news bot.
 
----
+It is a **decision system** that transforms daily information into:
 
-## 🚀 Ne Yapar?
-
-Bu sistem sadece haber göstermez.
-
-👉 Günlük olarak:
-
-- Analiz yapar
-- Öncelik belirler
-- Karar üretir
-- Aksiyon önerir
-
----
-
-
+- Insight  
+- Priority  
+- Action  
+- Opportunity  
 
 ---
 
@@ -52,223 +30,145 @@ Priority Level: Medium-High
 
 ---
 
+## 🚀 Core Capabilities
 
-
-## Why This Exists
-
-Most daily information systems stop at reporting.
-
-This project exists to go one step further:
-
-- turn information into analysis
-- turn analysis into priority
-- turn priority into action
-
-The goal is not to read more.
-The goal is to decide better and act faster.
-
-## 🧠 Core Özellikler
-
-### 📊 Decision Engine
-- Günün haberlerini analiz eder
-- Risk / fırsat / yön çıkarır
-- Executive seviyede özet üretir
+### 🧠 Decision Engine
+Analyzes daily signals and extracts:
+- Theme  
+- Risk  
+- Opportunity  
 
 ---
 
-### 🔢 Priority Scoring System
-- Revenue Impact
-- Strategic Fit
-- Urgency
-- Execution Ease
+### 🔢 Priority System
+Calculates daily focus using:
 
-Bu 4 parametre ile günün öncelik gücünü hesaplar
-
----
-
-
+- Revenue Impact  
+- Strategic Fit  
+- Urgency  
+- Execution Ease  
 
 ---
-
-### 💡 Idea Engine
-
-Generates business and product ideas directly from cloud and platform trends.
-
-Examples:
-- Cost optimization trend → FinOps solution opportunity
-- Kubernetes adoption → Managed platform service
-- Telco cloud growth → Telco-specific PaaS opportunity
-
-Transforms information into opportunity.
 
 ### 🎯 Top Priority Engine
-- Günün tek odağını belirler
+Defines the **single most important focus of the day**
 
 ---
 
 ### ⚡ Action Engine
-- Günlük yapılacak 3 net aksiyon üretir
+Turns decisions into **clear daily actions**
 
 ---
 
-### 🧠 Executive Insight
-- AI destekli stratejik yorum
+### ☁️ Cloud / Platform Radar
+Tracks high-value signals from:
+
+- Cloud (AWS, Azure, GCP)
+- Kubernetes / OpenShift
+- DevOps / Platform Engineering
+- Data Center / Infrastructure
+- Telco Cloud
+
+---
+
+### 💡 Idea Engine
+Generates business and product ideas from trends:
+
+- Cost optimization → FinOps solutions  
+- Kubernetes growth → Managed platform services  
+- Telco cloud → Telco-specific PaaS  
 
 ---
 
 ### 🔁 Smart Fallback System
-- AI yoksa sistem çalışmaya devam eder
-- Haber içeriklerinden akıllı çıkarım yapar
-
----
-
-### 🧠 AI Usage Limiter
-- Günlük maksimum AI kullanım sınırı
-- Maliyet kontrolü sağlar
-
----
-
-## 📦 Ek Özellikler
-
-- Global haber başlıkları
-- AI / Cloud / teknoloji radar
-- İstanbul hava durumu
-- English booster
-- Speaking practice
-- Günün ayeti
-- Kitap önerisi
-- Günün dizesi
-
----
-
-
+Works even without AI:
+- Extracts insight from structured rules
+- Ensures system reliability
 
 ---
 
 ## 🚀 Use Cases
 
 ### 👨‍💼 Executive Daily Briefing
-C-level ve yöneticiler için:
-- Günlük odak belirleme
-- Tek kritik önceliğe yönelme
-- Hızlı karar alma
+- Focus on what matters  
+- Make faster decisions  
 
 ---
 
-### ☁️ Cloud / Platform Teams
-Platform, DevOps ve Cloud ekipleri için:
-- Trendleri takip etme
-- Yeni servis / ürün fırsatlarını görme
-- Teknoloji roadmap oluşturma
+### ☁️ Cloud & Platform Teams
+- Track trends  
+- Identify opportunities  
 
 ---
 
 ### 💡 Startup & Innovation
-Girişim ve ürün ekipleri için:
-- Trendlerden iş fikri üretme
-- SaaS / platform fırsatlarını keşfetme
-- Pazar yönünü erken yakalama
+- Generate ideas  
+- Discover market direction  
 
 ---
 
-### 📊 Personal Productivity System
-Bireysel kullanım için:
-- Günlük bilgi → aksiyon dönüşümü
-- Odak yönetimi
-- Karar kalitesini artırma
-
-
-## ⚙️ Kullanılan Teknolojiler
-
-- Python 3
-- Telegram Bot API
-- OpenAI API (opsiyonel)
-- Google News RSS
-- Open-Meteo API
-- Cron
-
----
-
-## 🔄 Sistem Akışı
-
-1. Cron çalışır
-2. Veri toplanır
-3. Decision System analiz yapılır
-4. Priority hesaplanır
-5. Top Priority belirlenir
-6. Action Engine çalışır
-7. Telegram’a gönderilir
-
----
-
-## 🧠 Sistem Mantığı
-
-Information → Analysis → Decision → Action
-
----
-
-
+### 📊 Personal Productivity
+- Turn information into action  
+- Improve decision quality  
 
 ---
 
 ## 🛣️ Future Roadmap
 
-### Phase 1 — Decision System (Completed)
-- Daily briefing automation
-- Priority scoring system
-- Action Engine
-- Cloud / Platform Radar
-- Idea Engine
+### Phase 1 — Decision System ✔️
+- Daily briefing  
+- Priority scoring  
+- Action Engine  
+- Idea Engine  
 
 ---
 
 ### Phase 2 — Intelligence Layer
-- Idea scoring (business value, feasibility)
-- Trend clustering
-- Personalized recommendations
-- Memory-based learning (user behavior adaptation)
+- Idea scoring  
+- Trend clustering  
+- Personalization  
 
 ---
 
 ### Phase 3 — Productization
-- Web dashboard
-- Multi-user support
-- API layer
-- Notification channels (Slack, Email, WhatsApp)
+- Web dashboard  
+- API  
+- Multi-user system  
 
 ---
 
 ### Phase 4 — AI Co-Pilot
-- Conversational interface
-- “What should I do today?” AI assistant
-- Strategy suggestions
-- Scenario simulation (what-if analysis)
+- Conversational assistant  
+- Strategy recommendations  
+- Scenario simulations  
 
 ---
 
-### 🎯 Vision
+## 🧠 Philosophy
 
-Transform daily information into:
-
-→ Insight  
-→ Decision  
-→ Action  
-→ Opportunity  
-
-
-## 🔐 Not
-
-Stratejik katman (Decision System / Brain) bilinçli olarak repo dışında tutulmaktadır.
+Information is cheap.  
+Decision is rare.  
+Execution is everything.  
 
 ---
 
-## 🚀 Kurulum
+## ⚙️ Tech Stack
 
-pip install requests feedparser
+- Python  
+- Telegram Bot API  
+- OpenAI API (optional)  
+- RSS feeds  
+- Open-Meteo  
 
 ---
 
-## 📌 Çalıştırma
+## 🔐 Note
+
+The strategic intelligence layer is intentionally kept private.
+
+---
+
+## 🚀 Run
 
 python3 morning_brief.py
 
