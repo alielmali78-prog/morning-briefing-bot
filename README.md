@@ -1,40 +1,123 @@
-# Morning Briefing Bot
+# Morning Briefing Bot (Decision Engine Edition)
 
-Telegram üzerinden her sabah otomatik briefing gönderen kişisel asistan sistemi.
+Telegram üzerinden her sabah çalışan, **AI destekli karar ve aksiyon odaklı kişisel executive sistem**.
 
-## Özellikler
+---
+
+## 🚀 Ne Yapar?
+
+Bu sistem sadece haber göstermez.
+
+👉 Günlük olarak:
+
+- Analiz yapar
+- Öncelik belirler
+- Karar üretir
+- Aksiyon önerir
+
+---
+
+## 🧠 Core Özellikler
+
+### 📊 AEIN Decision Engine
+- Günün haberlerini analiz eder
+- Risk / fırsat / yön çıkarır
+- Executive seviyede özet üretir
+
+---
+
+### 🔢 Priority Scoring System
+- Revenue Impact
+- Strategic Fit
+- Urgency
+- Execution Ease
+
+Bu 4 parametre ile günün öncelik gücünü hesaplar
+
+---
+
+### 🎯 Top Priority Engine
+- Günün tek odağını belirler
+
+---
+
+### ⚡ Action Engine
+- Günlük yapılacak 3 net aksiyon üretir
+
+---
+
+### 🧠 Executive Insight
+- AI destekli stratejik yorum
+
+---
+
+### 🔁 Smart Fallback System
+- AI yoksa sistem çalışmaya devam eder
+- Haber içeriklerinden akıllı çıkarım yapar
+
+---
+
+### 🧠 AI Usage Limiter
+- Günlük maksimum AI kullanım sınırı
+- Maliyet kontrolü sağlar
+
+---
+
+## 📦 Ek Özellikler
 
 - Global haber başlıkları
-- 7 parçalı sabah haber rutini
+- AI / Cloud / teknoloji radar
 - İstanbul hava durumu
-- AI / Cloud / teknoloji başlıkları
 - English booster
+- Speaking practice
 - Günün ayeti
 - Kitap önerisi
-- Opsiyonel şiir dizesi
+- Günün dizesi
 
-## Kullanılan Teknolojiler
+---
+
+## ⚙️ Kullanılan Teknolojiler
 
 - Python 3
 - Telegram Bot API
+- OpenAI API (opsiyonel)
 - Google News RSS
 - Open-Meteo API
 - Cron
-- GitHub
 
-## Nasıl Çalışır?
+---
 
-Sistem şu akışla çalışır:
+## 🔄 Sistem Akışı
 
-1. Cron her sabah belirlenen saatte script'i çalıştırır
-2. Script haber başlıklarını RSS üzerinden çeker
-3. Hava durumu verisini Open-Meteo API’den alır
-4. İçeriği sabah briefing formatında birleştirir
-5. Telegram bot üzerinden kullanıcıya gönderir
+1. Cron çalışır
+2. Veri toplanır
+3. AEIN analiz yapılır
+4. Priority hesaplanır
+5. Top Priority belirlenir
+6. Action Engine çalışır
+7. Telegram’a gönderilir
 
-## Kurulum
+---
 
-### Gereksinimler
+## 🧠 Sistem Mantığı
 
-```bash
+Information → Analysis → Decision → Action
+
+---
+
+## 🔐 Not
+
+Stratejik katman (AEIN / Brain) bilinçli olarak repo dışında tutulmaktadır.
+
+---
+
+## 🚀 Kurulum
+
 pip install requests feedparser
+
+---
+
+## 📌 Çalıştırma
+
+python3 morning_brief.py
+
