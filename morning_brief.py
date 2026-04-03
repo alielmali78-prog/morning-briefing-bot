@@ -996,6 +996,40 @@ def map_priority_level(score):
         return "Critical"
 
 
+
+def build_idea_engine(cloud_news):
+    ideas = []
+
+    for item in cloud_news:
+        lower = item.lower()
+
+        if "cost" in lower or "optimization" in lower:
+            ideas.append("Cost optimization trendi → FinOps / cost visibility çözümü geliştir")
+
+        elif "kubernetes" in lower or "openshift" in lower:
+            ideas.append("Kubernetes yaygınlaşıyor → Managed Kubernetes / platform service fırsatı")
+
+        elif "edge" in lower:
+            ideas.append("Edge yatırımları artıyor → Edge Kubernetes / telco edge platform fırsatı")
+
+        elif "telco" in lower or "network" in lower:
+            ideas.append("Telco cloud büyüyor → Telco için özel PaaS / platform çözümü fırsatı")
+
+        elif "cloud" in lower:
+            ideas.append("Cloud adoption artıyor → Migration / modernization hizmet fırsatı")
+
+    if not ideas:
+        ideas.append("Cloud trendleri → Genel platform ve managed service fırsatları değerlendir")
+
+    # duplicate temizle
+    unique = []
+    for i in ideas:
+        if i not in unique:
+            unique.append(i)
+
+    return unique[:3]
+
+
 # ---------------- ANA İÇERİK ----------------
 def build_sabah_rutini(news, weather):
     global_news = news.get("global", [])[:3]
@@ -1033,8 +1067,14 @@ def build_sabah_rutini(news, weather):
     msg.append("")
 
     msg.append("*4) ☁️ Cloud / Platform Radar*")
+    ideas = build_idea_engine(cloud_platform_news)
     msg.append(bullets(cloud_platform_news))
     msg.append("")
+
+
+    msg.append("")
+    msg.append("*💡 Idea Engine*")
+    msg.append(bullets(ideas))
 
     msg.append("*5) AI / Tech Radar*")
     msg.append(bullets(tech_news))
