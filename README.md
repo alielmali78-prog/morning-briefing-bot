@@ -46,3 +46,18 @@ Priority Level: High
 
 python3 morning_brief.py
 
+---
+
+## OpenAI API
+
+OpenAI API key is optional.
+
+PulseAI works in two modes:
+
+- **AI mode** → richer insights, better recommendations, more dynamic outputs
+- **Fallback mode** → still works without AI, using built-in smart logic
+
+To enable AI, set your own API key:
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"

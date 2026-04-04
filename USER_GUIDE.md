@@ -103,9 +103,7 @@ EOF
 
 
 
-## USER_GUIDE.md sonuna eklenecek bölüm
 
-```md
 ---
 
 ## 🔐 OpenAI API Key
