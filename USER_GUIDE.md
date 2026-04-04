@@ -102,3 +102,32 @@ Focus → Decide → Act
 EOF
 
 
+
+## USER_GUIDE.md sonuna eklenecek bölüm
+
+```md
+---
+
+## 🔐 OpenAI API Key
+
+PulseAI can optionally use OpenAI for richer insights.
+
+Each user must provide their own API key.
+
+### Set your API key
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+What happens without an API key?
+
+If no API key is provided, PulseAI will still run.
+
+In that case, it works in fallback mode:
+
+no advanced AI generation
+built-in smart logic is used instead
+the system remains usable and stable
+Important
+Do not hardcode your API key into the script
+Do not commit your API key to GitHub
+Do not share your API key with others
