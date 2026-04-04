@@ -7,3 +7,5 @@ aein_v21.md
 archive/
 archive/
 *.swp
+__pycache__/
+*.broken.py
