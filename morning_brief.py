@@ -4,6 +4,8 @@ from pathlib import Path
 import os
 import random
 import json
+import re
+
 import feedparser
 import requests
 
@@ -11,67 +13,28 @@ TOKEN = os.getenv("TG_TOKEN")
 CHAT_ID = os.getenv("TG_CHAT_ID")
 
 if not TOKEN or not CHAT_ID:
-    raise RuntimeError("TG_TOKEN veya TG_CHAT_ID tanımlı değil")
+    raise RuntimeError("TG_TOKEN or TG_CHAT_ID is not defined")
 
-
-# ---------------- DOSYA YOLLARI ----------------
+# ---------------- FILE PATHS ----------------
 QURAN_STATE_FILE = Path.home() / ".morning_brief_quran_state"
 BOOK_STATE_FILE = Path.home() / ".morning_brief_book_state"
 POEM_STATE_FILE = Path.home() / ".morning_brief_poem_state"
+AI_LIMIT_FILE = Path.home() / ".morning_brief_ai_usage"
 
 QURAN_API_BASE = "https://api.alquran.cloud/v1"
 QURAN_EDITIONS = [
-    "tr.diyanet",
-    "tr.transliteration",
     "en.asad",
+    "en.pickthall",
+    "en.yusufali",
 ]
 TOTAL_AYAHS = 6236
 
-
-# ---------------- YARDIMCI ----------------
-
-AI_LIMIT_FILE = Path.home() / ".morning_brief_ai_usage"
-
-def can_use_ai():
-    from datetime import datetime
-    today = datetime.now().strftime("%Y-%m-%d")
-
-    try:
-        if AI_LIMIT_FILE.exists():
-            data = AI_LIMIT_FILE.read_text().split("|")
-            if len(data) == 2:
-                date, count = data
-                if date == today:
-                    return int(count) < 2
-    except:
-        pass
-
-    return True
-
-def register_ai_call():
-    from datetime import datetime
-    today = datetime.now().strftime("%Y-%m-%d")
-
-    try:
-        if AI_LIMIT_FILE.exists():
-            data = AI_LIMIT_FILE.read_text().split("|")
-            if len(data) == 2 and data[0] == today:
-                count = int(data[1]) + 1
-            else:
-                count = 1
-        else:
-            count = 1
-
-        AI_LIMIT_FILE.write_text(f"{today}|{count}")
-    except:
-        pass
-
+# ---------------- HELPERS ----------------
 def safe_openai_text_response(response_json):
     try:
         return response_json["output"][0]["content"][0]["text"].strip()
     except Exception:
         return None
-
 
 def load_json_file(path: Path, default):
     try:
@@ -81,91 +44,41 @@ def load_json_file(path: Path, default):
         pass
     return default
 
-
 def save_json_file(path: Path, data):
     try:
         path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
     except Exception:
         pass
 
+def can_use_ai():
+    today = datetime.now().strftime("%Y-%m-%d")
+    try:
+        if AI_LIMIT_FILE.exists():
+            date_str, count_str = AI_LIMIT_FILE.read_text(encoding="utf-8").split("|")
+            if date_str == today:
+                return int(count_str) < 2
+    except Exception:
+        pass
+    return True
 
+def register_ai_call():
+    today = datetime.now().strftime("%Y-%m-%d")
+    try:
+        count = 1
+        if AI_LIMIT_FILE.exists():
+            date_str, count_str = AI_LIMIT_FILE.read_text(encoding="utf-8").split("|")
+            if date_str == today:
+                count = int(count_str) + 1
+        AI_LIMIT_FILE.write_text(f"{today}|{count}", encoding="utf-8")
+    except Exception:
+        pass
 
-def build_smart_exec_fallback(news):
-    headlines = news.get("global", []) + news.get("business", []) + news.get("technology", [])
-    full = " ".join(headlines).lower()
-
-    if any(k in full for k in ["war", "iran", "attack", "strike", "crisis"]):
-        theme = "Jeopolitik riskler teknoloji ve piyasaları doğrudan etkiliyor."
-        risk = "Reaktif karar alma ve enerji maliyetleri."
-        opp = "Belirsizlik dönemlerinde doğru pozisyon avantaj yaratır."
-    elif any(k in full for k in ["ai", "cloud", "chip", "data"]):
-        theme = "AI ve cloud yatırımları rekabetin merkezinde."
-        risk = "Yanlış yatırım dağılımı."
-        opp = "Verimlilik ve ölçeklenebilirlik avantajı."
-    else:
-        theme = "Makro ve teknoloji dengesi birlikte ilerliyor."
-        risk = "Odak kaybı."
-        opp = "Operasyonel verimlilik."
-
-    return (
-        f"Ana tema: {theme}\n"
-        f"Risk: {risk}\n"
-        f"Fırsat: {opp}\n"
-        f"Ali için bugün:\n"
-        f"- Yap: Gündemi sadeleştir ve 1 ana hedef seç.\n"
-        f"- Dikkat et: Gereksiz işlere dağılma.\n"
-        f"- İzle: AI + cloud + piyasa kesişimi."
-    )
-
-# ---------------- AI INSIGHT ----------------
-def generate_ai_insight(news):
-    fallback = (
-        "Ana tema: Enerji, makro baskı ve teknoloji yatırımları birlikte fiyatlanıyor.\n"
-        "Risk: Jeopolitik belirsizlik ve maliyet baskısı.\n"
-        "Fırsat: Verimlilik odaklı AI ve cloud optimizasyonu.\n"
-        "Ali için bugün:\n"
-        "- Yap: AI işlerini doğrudan verimlilik ve maliyet KPI'larına bağla.\n"
-        "- Dikkat et: Enerji ve altyapı kapasite planlamasını hafife alma.\n"
-        "- İzle: Telco + cloud + AI birleşiminden çıkan yeni iş modelleri."
-    )
+def ask_openai(prompt: str):
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key or not can_use_ai():
+        return None
 
     try:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key or not can_use_ai():
-            return build_smart_exec_fallback(news)
-
-        headlines = news.get("global", []) + news.get("business", []) + news.get("technology", [])
-
-        prompt = f"""
-Sen Ali'nin kişisel stratejik sabah danışmanısın.
-
-Ali:
-- Telekom, bulut ve platform teknolojilerinde deneyimli bir yönetici
-- Kısa, net ve aksiyon odaklı çıktı ister
-- Gürültü değil, anlamlı yön ve öncelik görmek ister
-
-Aşağıdaki haber başlıklarını değerlendir:
-
-{headlines}
-
-Türkçe yaz.
-Çıktı tam olarak şu başlıklarla gelsin:
-
-Ana tema:
-Risk:
-Fırsat:
-Ali için bugün:
-- Yap:
-- Dikkat et:
-- İzle:
-
-Kurallar:
-- En fazla 8 kısa satır
-- Yönetici dili kullan
-- Haberleri tek tek tekrar etme
-- Ali için somut öneri ver
-"""
-
         response = requests.post(
             "https://api.openai.com/v1/responses",
             headers={
@@ -173,27 +86,27 @@ Kurallar:
                 "Content-Type": "application/json",
             },
             json={
-                "model": "gpt-4.1-mini",
+                "model": "gpt-5.4-mini",
                 "input": prompt,
             },
             timeout=20,
         )
 
         if response.status_code != 200:
-            return fallback
+            return None
 
         data = response.json()
-        text = safe_openai_text_response(data)
-        register_ai_call()
-        return text if text else fallback
-
+        out = safe_openai_text_response(data)
+        if out:
+            register_ai_call()
+            return out
+        return None
     except Exception:
-        return fallback
+        return None
 
-
-
+# ---------------- SMART FALLBACKS ----------------
 def build_smart_aein_fallback(news):
-    headlines = news.get("global", []) + news.get("business", []) + news.get("technology", [])
+    headlines = news.get("global", []) + news.get("business", []) + news.get("technology", []) + news.get("cloud_platform", [])
     full_text = " ".join(headlines).lower()
 
     revenue = 5
@@ -202,22 +115,19 @@ def build_smart_aein_fallback(news):
     urgency = 5
 
     revenue_keywords = ["ipo", "valuation", "investment", "revenue", "market", "growth", "business", "deal"]
-    strategic_keywords = ["ai", "cloud", "chip", "data", "automation", "platform", "technology"]
-    urgent_keywords = ["war", "strike", "attack", "fires", "warning", "live updates", "crisis", "iran", "tehran"]
+    strategic_keywords = ["ai", "cloud", "chip", "data", "automation", "platform", "technology", "kubernetes", "openshift", "telco"]
+    urgent_keywords = ["war", "strike", "attack", "fires", "warning", "crisis", "iran", "tehran", "military"]
     difficulty_keywords = ["tariff", "sanction", "regulation", "warning", "crisis", "conflict", "pharmaceutical"]
 
     for k in revenue_keywords:
         if k in full_text:
             revenue += 1
-
     for k in strategic_keywords:
         if k in full_text:
             strategic += 1
-
     for k in urgent_keywords:
         if k in full_text:
             urgency += 1
-
     for k in difficulty_keywords:
         if k in full_text:
             execution -= 1
@@ -228,320 +138,251 @@ def build_smart_aein_fallback(news):
     urgency = max(4, min(urgency, 10))
 
     if urgency >= 8:
-        theme = "Jeopolitik baskı ile teknoloji ve piyasa gündemi aynı anda yönetiliyor."
-        risk = "Dikkatin dağılması ve reaktif karar alma riski artıyor."
+        theme = "Geopolitical pressure and technology-market dynamics must be managed at the same time."
+        risk = "The risk of distraction and reactive decision-making is increasing."
     elif strategic >= 8:
-        theme = "Teknoloji eksenli gündem stratejik pozisyon almayı öne çıkarıyor."
-        risk = "Yanlış önceliklendirme yüzünden fırsat penceresi kaçabilir."
+        theme = "Technology-led developments are creating a strong strategic positioning moment."
+        risk = "Poor prioritization could waste a valuable opportunity window."
     else:
-        theme = "Makro baskılar ve iş gündemi birlikte okunmalı."
-        risk = "Parçalı gündem odak kaybı yaratabilir."
+        theme = "Macro pressure and business priorities should be read together."
+        risk = "A fragmented agenda can create loss of focus."
 
     if strategic >= 8 and revenue >= 7:
-        opp = "AI, cloud ve platform alanında ticari ve stratejik fırsat birlikte oluşuyor."
+        opportunity = "AI, cloud, and platform trends are creating both strategic and commercial opportunity."
     elif revenue >= 7:
-        opp = "Piyasa hareketliliği yeni gelir ve teklif fırsatları yaratabilir."
+        opportunity = "Market movement may open new revenue and offer opportunities."
     else:
-        opp = "Operasyon verimliliği ve odaklı execution ile avantaj yaratılabilir."
+        opportunity = "Operational efficiency and focused execution can create advantage."
 
     if urgency >= 8:
-        advice = "Bugün haberleri izlemek yerine risk ve öncelik filtresiyle sadeleştir."
-        decision = "Tek kritik karar alanını seç, diğer tüm konuları ikinci plana al."
+        recommendation = "Simplify the day with a risk and priority filter instead of tracking every headline."
+        decision = "Choose one critical decision area and place all other topics second."
     elif strategic >= 8:
-        advice = "AI ve cloud başlıklarını doğrudan iş sonucu üreten alanlarla eşleştir."
-        decision = "Bugün stratejik uyumu yüksek tek bir başlığı somut aksiyona çevir."
+        recommendation = "Map AI and cloud developments directly to high-impact business outcomes."
+        decision = "Turn one high strategic-fit topic into concrete action today."
     else:
-        advice = "Gelir, delivery ve stratejik uyum filtresiyle gündemi daralt."
-        decision = "Bugün en yüksek iş etkisi olan tek konuyu ilerlet."
+        recommendation = "Narrow the agenda using revenue, delivery, and strategic-fit filters."
+        decision = "Advance the one topic with the highest business impact today."
 
     return (
-        f"Ana tema: {theme}\n"
+        f"Theme: {theme}\n"
         f"Risk: {risk}\n"
-        f"Fırsat: {opp}\n"
-        f"\nScore:\n"
+        f"Opportunity: {opportunity}\n\n"
+        f"Score:\n"
         f"- Revenue Impact: {revenue}/10\n"
         f"- Execution Ease: {execution}/10\n"
         f"- Strategic Fit: {strategic}/10\n"
-        f"- Urgency: {urgency}/10\n"
-        f"\nÖneri: {advice}\n"
-        f"Karar: {decision}"
+        f"- Urgency: {urgency}/10\n\n"
+        f"Recommendation: {recommendation}\n"
+        f"Decision: {decision}"
     )
 
+def build_smart_exec_fallback(news):
+    headlines = news.get("global", []) + news.get("business", []) + news.get("technology", []) + news.get("cloud_platform", [])
+    full = " ".join(headlines).lower()
 
-# ---------------- AEIN DECISION ENGINE ----------------
-def generate_aein_decision(news):
-    fallback = build_smart_aein_fallback(news)
+    if any(k in full for k in ["war", "iran", "attack", "strike", "crisis", "military"]):
+        theme = "Geopolitical risks are directly affecting technology and markets."
+        risk = "Reactive decision-making and energy-cost pressure."
+        opportunity = "The right positioning creates advantage during uncertainty."
+    elif any(k in full for k in ["ai", "cloud", "chip", "data", "platform"]):
+        theme = "AI and cloud investments are at the center of competition."
+        risk = "Misallocation of investment."
+        opportunity = "Efficiency and scalability advantage."
+    else:
+        theme = "Macro conditions and technology dynamics are moving together."
+        risk = "Loss of focus."
+        opportunity = "Operational efficiency."
 
-    try:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key or not can_use_ai():
-            return fallback
-
-        headlines = news.get("global", []) + news.get("business", []) + news.get("technology", [])
-
-        prompt = f"""
-Sen AEIN v21 mantığıyla çalışan bir executive decision engine'sin.
-
-Ali'nin karar filtresi:
-- gelir getiriyor mu?
-- delivery gücünü artırıyor mu?
-- ölçeklenebilir modele katkı sağlıyor mu?
-- stratejik pozisyonu güçlendiriyor mu?
-- zaman / enerji / para maliyetine değiyor mu?
-
-Aşağıdaki haber başlıklarını bu mantıkla değerlendir:
-
-{headlines}
-
-Türkçe yaz.
-
-Çıktı formatı:
-
-Ana tema:
-Risk:
-Fırsat:
-
-Score:
-- Revenue Impact: X/10
-- Execution Ease: X/10
-- Strategic Fit: X/10
-- Urgency: X/10
-
-Öneri:
-Karar:
-
-Kurallar:
-- kısa ve net yaz
-- sayılar gerçekçi olsun
-- karar cümlesi somut ve aksiyon içersin
-- haber başlıklarını tekrar etme
-"""
-
-        response = requests.post(
-            "https://api.openai.com/v1/responses",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "gpt-4.1-mini",
-                "input": prompt,
-            },
-            timeout=20,
-        )
-
-        if response.status_code != 200:
-            return fallback
-
-        data = response.json()
-        text = safe_openai_text_response(data)
-        register_ai_call()
-        return text if text else fallback
-
-    except Exception:
-        return fallback
-
-
+    return (
+        f"Theme: {theme}\n"
+        f"Risk: {risk}\n"
+        f"Opportunity: {opportunity}\n"
+        f"Today's Recommendation:\n"
+        f"- Do: Simplify the agenda and choose one main objective.\n"
+        f"- Watch: Avoid spreading attention across low-value tasks.\n"
+        f"- Track: The intersection of AI, cloud, and market dynamics."
+    )
 
 def build_smart_english(news):
-    headlines = " ".join(news.get("global", []) + news.get("technology", [])).lower()
+    headlines = " ".join(news.get("global", []) + news.get("technology", []) + news.get("cloud_platform", [])).lower()
 
     if "ai" in headlines or "cloud" in headlines:
         return (
-            "Phrasal verb: scale up — ölçek büyütmek\n"
-            "Idiom: stay ahead of the curve — trendin önünde olmak\n"
-            "Business expression: digital transformation — dijital dönüşüm\n"
+            "Phrasal verb: scale up - to expand at scale\n"
+            "Idiom: stay ahead of the curve - to stay ahead of trends\n"
+            "Business expression: digital transformation - digital transformation\n"
             "Example: Companies must scale up AI capabilities to stay ahead of the curve."
         )
-    elif "war" in headlines or "crisis" in headlines:
+    elif "war" in headlines or "crisis" in headlines or "iran" in headlines:
         return (
-            "Phrasal verb: brace for — hazırlanmak\n"
-            "Idiom: in troubled waters — zor durumda\n"
-            "Business expression: risk management — risk yönetimi\n"
-            "Example: Firms must brace for uncertainty in troubled waters."
+            "Phrasal verb: brace for - to prepare for\n"
+            "Idiom: in troubled waters - in a difficult situation\n"
+            "Business expression: risk management - risk management\n"
+            "Example: Firms must brace for uncertainty when they are in troubled waters."
         )
     else:
         return (
-            "Phrasal verb: move forward — ilerlemek\n"
-            "Idiom: keep the momentum — ivmeyi korumak\n"
-            "Business expression: operational efficiency — operasyonel verimlilik\n"
+            "Phrasal verb: move forward - to continue progressing\n"
+            "Idiom: keep the momentum - to maintain momentum\n"
+            "Business expression: operational efficiency - operational efficiency\n"
             "Example: Teams must move forward while keeping the momentum."
         )
+
+# ---------------- AI OUTPUTS ----------------
+def generate_ai_insight(news):
+    fallback = build_smart_exec_fallback(news)
+
+    headlines = news.get("global", []) + news.get("business", []) + news.get("technology", []) + news.get("cloud_platform", [])
+    prompt = (
+        "You are a strategic executive advisor.\n\n"
+        f"Headlines:\n{headlines}\n\n"
+        "Write in English.\n"
+        "Output exactly in this format:\n"
+        "Theme:\n"
+        "Risk:\n"
+        "Opportunity:\n"
+        "Today's Recommendation:\n"
+        "- Do:\n"
+        "- Watch:\n"
+        "- Track:\n"
+        "Keep it concise and executive-level.\n"
+    )
+
+    out = ask_openai(prompt)
+    return out if out else fallback
+
+def generate_aein_decision(news):
+    fallback = build_smart_aein_fallback(news)
+
+    headlines = news.get("global", []) + news.get("business", []) + news.get("technology", []) + news.get("cloud_platform", [])
+    prompt = (
+        "You are an executive decision engine.\n\n"
+        "Decision filters:\n"
+        "- Does it create revenue?\n"
+        "- Does it improve delivery capability?\n"
+        "- Does it contribute to a scalable model?\n"
+        "- Does it strengthen strategic position?\n"
+        "- Is it worth the time, energy, and cost?\n\n"
+        f"Evaluate these headlines:\n{headlines}\n\n"
+        "Write in English.\n"
+        "Output format:\n"
+        "Theme:\n"
+        "Risk:\n"
+        "Opportunity:\n\n"
+        "Score:\n"
+        "- Revenue Impact: X/10\n"
+        "- Execution Ease: X/10\n"
+        "- Strategic Fit: X/10\n"
+        "- Urgency: X/10\n\n"
+        "Recommendation:\n"
+        "Decision:\n"
+        "Do not repeat the headlines.\n"
+    )
+
+    out = ask_openai(prompt)
+    return out if out else fallback
 
 # ---------------- AI ENGLISH BOOSTER ----------------
 ENGLISH_FALLBACKS = [
     {
-        "phrasal": ("scale up", "ölçek büyütmek"),
-        "idiom": ("move the needle", "anlamlı fark yaratmak"),
-        "business": ("cost discipline", "maliyet disiplini"),
+        "phrasal": ("scale up", "to expand at scale"),
+        "idiom": ("move the needle", "to make a meaningful impact"),
+        "business": ("cost discipline", "cost discipline"),
         "example": "We need to scale up carefully if we want to move the needle without losing cost discipline."
     },
     {
-        "phrasal": ("roll out", "devreye almak"),
-        "idiom": ("on the same page", "aynı fikirde olmak"),
-        "business": ("operational efficiency", "operasyonel verimlilik"),
+        "phrasal": ("roll out", "to launch or deploy"),
+        "idiom": ("on the same page", "to be aligned"),
+        "business": ("operational efficiency", "operational efficiency"),
         "example": "Before we roll out the platform, all teams must be on the same page."
     },
     {
-        "phrasal": ("cut back", "azaltmak, kısmak"),
-        "idiom": ("brace for impact", "sert etkiye hazırlanmak"),
-        "business": ("risk exposure", "risk maruziyeti"),
+        "phrasal": ("cut back", "to reduce or cut back"),
+        "idiom": ("brace for impact", "to prepare for impact"),
+        "business": ("risk exposure", "risk exposure"),
         "example": "Firms may cut back investment and brace for impact when risk exposure rises."
     },
     {
-        "phrasal": ("phase out", "kademeli kaldırmak"),
-        "idiom": ("in the driver's seat", "kontrolde olmak"),
-        "business": ("strategic alignment", "stratejik uyum"),
+        "phrasal": ("phase out", "to remove gradually"),
+        "idiom": ("in the driver's seat", "to be in control"),
+        "business": ("strategic alignment", "strategic alignment"),
         "example": "A company stays in the driver's seat when it phases out legacy systems with strong strategic alignment."
     },
 ]
 
-
 def generate_english_booster(news):
     fallback_item = random.choice(ENGLISH_FALLBACKS)
     fallback_text = (
-        f"Phrasal verb: {fallback_item['phrasal'][0]} — {fallback_item['phrasal'][1]}\n"
-        f"Idiom: {fallback_item['idiom'][0]} — {fallback_item['idiom'][1]}\n"
-        f"Business expression: {fallback_item['business'][0]} — {fallback_item['business'][1]}\n"
+        f"Phrasal verb: {fallback_item['phrasal'][0]} - {fallback_item['phrasal'][1]}\n"
+        f"Idiom: {fallback_item['idiom'][0]} - {fallback_item['idiom'][1]}\n"
+        f"Business expression: {fallback_item['business'][0]} - {fallback_item['business'][1]}\n"
         f"Example: {fallback_item['example']}"
     )
 
-    try:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key or not can_use_ai():
-            return build_smart_english(news)
+    headlines = news.get("global", []) + news.get("business", []) + news.get("technology", []) + news.get("cloud_platform", [])
+    prompt = (
+        "You are a professional business English coach.\n\n"
+        f"Generate English learning content that matches these headlines:\n{headlines}\n\n"
+        "Write exactly in this format:\n"
+        "Phrasal verb: <expression> - <meaning in English>\n"
+        "Idiom: <expression> - <meaning in English>\n"
+        "Business expression: <expression> - <meaning in English>\n"
+        "Example: <English example sentence>\n"
+        "Keep it concise.\n"
+    )
 
-        headlines = news.get("global", []) + news.get("business", []) + news.get("technology", [])
-
-        prompt = f"""
-Sen Ali için çalışan profesyonel bir iş İngilizcesi koçusun.
-
-Aşağıdaki haber başlıklarının temasına uygun İngilizce öğrenme içeriği üret:
-
-{headlines}
-
-Türkçe açıklamalı ve tam olarak şu formatta yaz:
-
-Phrasal verb: <ifade> — <Türkçe anlamı>
-Idiom: <ifade> — <Türkçe anlamı>
-Business expression: <ifade> — <Türkçe anlamı>
-Example: <İngilizce örnek cümle>
-
-Kurallar:
-- Profesyonel ve iş hayatına uygun ifadeler seç
-- Günün haber temasıyla uyumlu olsun
-- Kısa ve net yaz
-- Ek açıklama ekleme
-"""
-
-        response = requests.post(
-            "https://api.openai.com/v1/responses",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "gpt-4.1-mini",
-                "input": prompt,
-            },
-            timeout=20,
-        )
-
-        if response.status_code != 200:
-            return fallback_text
-
-        data = response.json()
-        text = safe_openai_text_response(data)
-        register_ai_call()
-        return text if text else fallback_text
-
-    except Exception:
-        return fallback_text
-
+    out = ask_openai(prompt)
+    return out if out else build_smart_english(news)
 
 # ---------------- AI SPEAKING PROMPT ----------------
 SPEAKING_FALLBACKS = [
-    "In 2–3 sentences, explain how energy costs impact cloud strategy.",
+    "In 2-3 English sentences, explain how energy costs affect cloud strategy.",
     "Describe how AI investments should be prioritized in uncertain markets.",
     "How should a telecom company adapt to AI transformation?",
     "Explain how a cloud leader should balance innovation and cost pressure.",
 ]
 
-
 def generate_speaking_prompt(news):
     fallback = random.choice(SPEAKING_FALLBACKS)
 
-    try:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key or not can_use_ai():
-            return fallback
+    headlines = news.get("global", []) + news.get("technology", []) + news.get("cloud_platform", [])
+    prompt = (
+        "Create one executive speaking practice question.\n\n"
+        f"Context:\n{headlines}\n\n"
+        "Rules:\n"
+        "- one sentence only\n"
+        "- business English\n"
+        "- executive level\n"
+        "- should require a 2-3 sentence answer\n"
+        "- focus on cloud, AI, telecom, strategy, or risk\n"
+        "- practical, not academic\n"
+    )
 
-        headlines = news.get("global", []) + news.get("technology", [])
+    out = ask_openai(prompt)
+    return out if out else fallback
 
-        prompt = f"""
-Create 1 executive speaking practice question for Ali.
-
-Context:
-{headlines}
-
-Rules:
-- 1 sentence only
-- Business English
-- Executive level
-- Should require a 2-3 sentence answer
-- Focus on cloud, AI, telecom, strategy or risk
-- Make it practical, not academic
-"""
-
-        response = requests.post(
-            "https://api.openai.com/v1/responses",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "gpt-4.1-mini",
-                "input": prompt,
-            },
-            timeout=20,
-        )
-
-        if response.status_code != 200:
-            return fallback
-
-        data = response.json()
-        text = safe_openai_text_response(data)
-        register_ai_call()
-        return text if text else fallback
-
-    except Exception:
-        return fallback
-
-
-# ---------------- HAVA DURUMU ----------------
+# ---------------- WEATHER ----------------
 def get_weather():
     try:
         url = "https://api.open-meteo.com/v1/forecast?latitude=41.01&longitude=28.97&current_weather=true"
         data = requests.get(url, timeout=10).json()
         temp = data["current_weather"]["temperature"]
-        return f"İstanbul: {temp}°C"
+        return f"Istanbul: {temp}C"
     except Exception:
-        return "İstanbul: veri alınamadı"
+        return "Istanbul: data unavailable"
 
-
-# ---------------- AYET (API + tekrarsız sıra) ----------------
+# ---------------- VERSE ----------------
 def read_quran_index():
     try:
         if QURAN_STATE_FILE.exists():
-            return int(QURAN_STATE_FILE.read_text().strip())
+            return int(QURAN_STATE_FILE.read_text(encoding="utf-8").strip())
     except Exception:
         pass
     return 1
 
-
 def write_quran_index(idx: int):
-    QURAN_STATE_FILE.write_text(str(idx))
-
+    QURAN_STATE_FILE.write_text(str(idx), encoding="utf-8")
 
 def fetch_ayah_from_api(global_ayah_number: int):
     for edition in QURAN_EDITIONS:
@@ -553,54 +394,49 @@ def fetch_ayah_from_api(global_ayah_number: int):
 
             surah_name = data["surah"]["englishName"]
             number_in_surah = data["numberInSurah"]
-            text = data["text"]
+            verse_text = data["text"]
 
-            return (f"{surah_name} {number_in_surah}", text)
+            return (f"{surah_name} {number_in_surah}", verse_text)
         except Exception:
             continue
 
-    return ("Ayet alınamadı", "Bugün için ayet verisi alınamadı.")
-
+    return ("Verse unavailable", "Verse data is unavailable today.")
 
 def get_daily_ayah():
     idx = read_quran_index()
     ref, text = fetch_ayah_from_api(idx)
-
     next_idx = idx + 1
     if next_idx > TOTAL_AYAHS:
         next_idx = 1
-
     write_quran_index(next_idx)
     return (ref, text)
 
-
-# ---------------- KİTAP ----------------
+# ---------------- BOOKS ----------------
 BOOK_FALLBACKS = {
     "ai_strategy": [
-        "Co-Intelligence – Ethan Mollick",
-        "The Coming Wave – Mustafa Suleyman",
-        "Empire of AI – Karen Hao",
+        "Co-Intelligence - Ethan Mollick",
+        "The Coming Wave - Mustafa Suleyman",
+        "Empire of AI - Karen Hao",
     ],
     "leadership": [
-        "Lead Bigger – Anne Chow",
-        "Working Backwards – Colin Bryar and Bill Carr",
+        "Lead Bigger - Anne Chow",
+        "Working Backwards - Colin Bryar and Bill Carr",
     ],
     "execution": [
-        "Reshuffle – Sangeet Paul Choudary",
-        "Competing in the Age of AI – Marco Iansiti & Karim R. Lakhani",
+        "Reshuffle - Sangeet Paul Choudary",
+        "Competing in the Age of AI - Marco Iansiti and Karim R. Lakhani",
     ],
 }
 
 BOOK_REASON_FALLBACKS = {
-    "Co-Intelligence – Ethan Mollick": "Neden bugün: AI’yi günlük iş akışına pratik şekilde entegre etme bakışı sunuyor.",
-    "The Coming Wave – Mustafa Suleyman": "Neden bugün: AI, regülasyon ve stratejik risk dengesini güçlü biçimde düşündürüyor.",
-    "Empire of AI – Karen Hao": "Neden bugün: AI ekosistemindeki güç dengelerini ve rekabeti daha net görmeni sağlar.",
-    "Lead Bigger – Anne Chow": "Neden bugün: dönüşüm dönemlerinde liderlik etkisini daha sistemli kurmaya yardım eder.",
-    "Working Backwards – Colin Bryar and Bill Carr": "Neden bugün: müşteri odaklı ve disiplinli execution kültürünü anlatır.",
-    "Reshuffle – Sangeet Paul Choudary": "Neden bugün: platform, iş modeli ve değişen rekabet yapısını daha iyi okumana yardım eder.",
-    "Competing in the Age of AI – Marco Iansiti & Karim R. Lakhani": "Neden bugün: AI çağında işletme modeli ve organizasyon etkisini netleştirir.",
+    "Co-Intelligence - Ethan Mollick": "Why today: It offers a practical perspective on integrating AI into everyday workflows.",
+    "The Coming Wave - Mustafa Suleyman": "Why today: It helps frame the balance between AI, regulation, and strategic risk.",
+    "Empire of AI - Karen Hao": "Why today: It gives a clearer view of power dynamics and competition in the AI ecosystem.",
+    "Lead Bigger - Anne Chow": "Why today: It helps build leadership impact more systematically during transformation periods.",
+    "Working Backwards - Colin Bryar and Bill Carr": "Why today: It explains a customer-centric and disciplined execution culture.",
+    "Reshuffle - Sangeet Paul Choudary": "Why today: It helps you better understand platforms, business models, and changing competitive dynamics.",
+    "Competing in the Age of AI - Marco Iansiti and Karim R. Lakhani": "Why today: It clarifies business-model and organizational impact in the age of AI.",
 }
-
 
 def flatten_book_pool():
     books = []
@@ -608,12 +444,10 @@ def flatten_book_pool():
         books.extend(group)
     return books
 
-
 def choose_book_category(news):
-    global_text = " ".join(news.get("global", [])).lower()
-    tech_text = " ".join(news.get("technology", [])).lower()
-    business_text = " ".join(news.get("business", [])).lower()
-    full_text = f"{global_text} {tech_text} {business_text}"
+    full_text = " ".join(
+        news.get("global", []) + news.get("technology", []) + news.get("business", []) + news.get("cloud_platform", [])
+    ).lower()
 
     ai_keywords = ["ai", "artificial intelligence", "model", "chip", "cloud", "data", "automation"]
     leadership_keywords = ["leadership", "manager", "ceo", "strategy", "board", "organization", "talent"]
@@ -628,17 +462,12 @@ def choose_book_category(news):
         "leadership": leadership_score,
         "execution": execution_score,
     }
-
     return max(scores, key=scores.get)
-
 
 def get_recent_books():
     state = load_json_file(BOOK_STATE_FILE, {"recent": []})
     recent = state.get("recent", [])
-    if isinstance(recent, list):
-        return recent
-    return []
-
+    return recent if isinstance(recent, list) else []
 
 def save_recent_book(book_title):
     recent = get_recent_books()
@@ -646,126 +475,84 @@ def save_recent_book(book_title):
     updated = updated[:7]
     save_json_file(BOOK_STATE_FILE, {"recent": updated})
 
-
 def choose_fallback_book(news):
     category = choose_book_category(news)
-    candidate_pool = BOOK_FALLBACKS.get(category, [])[:]
-
-    if not candidate_pool:
-        candidate_pool = flatten_book_pool()
+    pool = BOOK_FALLBACKS.get(category, [])[:]
+    if not pool:
+        pool = flatten_book_pool()
 
     recent = set(get_recent_books())
-    filtered = [book for book in candidate_pool if book not in recent]
-
+    filtered = [book for book in pool if book not in recent]
     if not filtered:
-        all_books = flatten_book_pool()
-        filtered = [book for book in all_books if book not in recent]
-
+        filtered = [book for book in flatten_book_pool() if book not in recent]
     if not filtered:
         filtered = flatten_book_pool()
 
     chosen = random.choice(filtered)
-    reason = BOOK_REASON_FALLBACKS.get(chosen, "Neden bugün: gündemin ana ekseniyle bağlantılı güçlü bir okuma önerisi.")
+    reason = BOOK_REASON_FALLBACKS.get(chosen, "Why today: It is a strong reading recommendation aligned with the day's main theme.")
     save_recent_book(chosen)
     return chosen, reason
-
 
 def generate_book_recommendation(news):
     fallback_book, fallback_reason = choose_fallback_book(news)
 
-    try:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key or not can_use_ai():
-            return fallback_book, fallback_reason
+    headlines = news.get("global", []) + news.get("technology", []) + news.get("business", []) + news.get("cloud_platform", [])
+    recent_books = get_recent_books()
+    prompt = (
+        "Recommend one professional book.\n\n"
+        f"Context:\n{headlines}\n\n"
+        f"Recently suggested books:\n{recent_books}\n\n"
+        "Rules:\n"
+        "- Suggest one book\n"
+        "- Focus on AI, leadership, strategy, or execution\n"
+        "- Do not repeat recent suggestions\n"
+        "- Output exactly two lines\n"
+        "- Line 1: Book: <title> - <author>\n"
+        "- Line 2: Why today: <one-sentence reason in English>\n"
+    )
 
-        recent_books = get_recent_books()
-        headlines = news.get("global", []) + news.get("technology", []) + news.get("business", [])
-
-        prompt = f"""
-Ali için profesyonel bir kitap öner.
-
-Context:
-{headlines}
-
-Son günlerde önerilmiş kitaplar:
-{recent_books}
-
-Kurallar:
-- 1 kitap öner
-- AI / leadership / strategy / execution odaklı olsun
-- Son önerilenleri tekrar etme
-- Çıktı tam olarak iki satır olsun
-- 1. satır: Kitap: <kitap adı> – <yazar>
-- 2. satır: Neden bugün: <tek cümle Türkçe gerekçe>
-- Ek açıklama yazma
-"""
-
-        response = requests.post(
-            "https://api.openai.com/v1/responses",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "gpt-4.1-mini",
-                "input": prompt,
-            },
-            timeout=20,
-        )
-
-        if response.status_code != 200:
-            return fallback_book, fallback_reason
-
-        data = response.json()
-        text = safe_openai_text_response(data)
-
-        if not text:
-            return fallback_book, fallback_reason
-
-        lines = [line.strip() for line in text.splitlines() if line.strip()]
-        if len(lines) < 2:
-            return fallback_book, fallback_reason
-
-        raw_book_line = lines[0]
-        raw_reason_line = lines[1]
-
-        if ":" in raw_book_line:
-            book_title = raw_book_line.split(":", 1)[1].strip()
-        else:
-            book_title = raw_book_line.strip()
-
-        reason = raw_reason_line if raw_reason_line.startswith("Neden bugün:") else f"Neden bugün: {raw_reason_line}"
-
-        if not book_title:
-            return fallback_book, fallback_reason
-
-        save_recent_book(book_title)
-        return book_title, reason
-
-    except Exception:
+    out = ask_openai(prompt)
+    if not out:
         return fallback_book, fallback_reason
 
+    lines = [line.strip() for line in out.splitlines() if line.strip()]
+    if len(lines) < 2:
+        return fallback_book, fallback_reason
 
-# ---------------- GÜNÜN DİZESİ ----------------
+    raw_book_line = lines[0]
+    raw_reason_line = lines[1]
+
+    if ":" in raw_book_line:
+        book_title = raw_book_line.split(":", 1)[1].strip()
+    else:
+        book_title = raw_book_line.strip()
+
+    reason = raw_reason_line if raw_reason_line.startswith("Why today:") else f"Why today: {raw_reason_line}"
+
+    if not book_title:
+        return fallback_book, fallback_reason
+
+    save_recent_book(book_title)
+    return book_title, reason
+
+# ---------------- QUOTES ----------------
 POEM_FALLBACKS = [
-    "“Yaşamak bir ağaç gibi tek ve hür ve bir orman gibi kardeşçesine” – Nazım Hikmet",
-    "“Ben sana mecburum bilemezsin” – Attila İlhan",
-    "“Ne içindeyim zamanın, ne de büsbütün dışında” – Ahmet Hamdi Tanpınar",
-    "“Göğe bakalım” – Turgut Uyar",
-    "“İnsan yaşadığı yere benzer” – Edip Cansever",
-    "“Bir umuttur yaşatan insanı” – Nazım Hikmet",
-    "“Aldırma gönül aldırma” – Sabahattin Ali",
-    "“En uzak mesafe ne Afrika’dır ne Çin” – Cemal Süreya",
-    "“Sevmek, kimi zaman rezilce korkudur” – Attila İlhan",
-    "“Her şey sende gizli” – Sıtkı Erinç",
+    "To live free and alone like a tree, and brotherly like a forest. - Nazim Hikmet",
+    "Hope is what keeps a person alive. - Nazim Hikmet",
+    "Let us look at the sky. - Turgut Uyar",
+    "You do not know how bound I am to you. - Attila Ilhan",
+    "I am neither within time, nor entirely outside it. - Ahmet Hamdi Tanpinar",
+    "A person resembles the place they live in. - Edip Cansever",
+    "Do not mind it, my heart, do not mind it. - Sabahattin Ali",
+    "The longest distance is neither Africa nor China. - Cemal Sureya",
+    "To love is, at times, a humiliating fear. - Attila Ilhan",
+    "Everything is hidden within you. - Sitki Erinc",
 ]
-
 
 def get_recent_poems():
     state = load_json_file(POEM_STATE_FILE, {"recent": []})
     recent = state.get("recent", [])
     return recent if isinstance(recent, list) else []
-
 
 def save_recent_poem(poem_text):
     recent = get_recent_poems()
@@ -773,81 +560,41 @@ def save_recent_poem(poem_text):
     updated = updated[:10]
     save_json_file(POEM_STATE_FILE, {"recent": updated})
 
-
 def choose_fallback_poem():
     recent = set(get_recent_poems())
     filtered = [p for p in POEM_FALLBACKS if p not in recent]
-
     if not filtered:
         filtered = POEM_FALLBACKS[:]
-
     chosen = random.choice(filtered)
     save_recent_poem(chosen)
     return chosen
 
-
 def generate_poem_line(news):
     fallback = choose_fallback_poem()
 
-    try:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key or not can_use_ai():
-            return fallback
+    headlines = news.get("global", []) + news.get("technology", []) + news.get("business", []) + news.get("cloud_platform", [])
+    recent_poems = get_recent_poems()
+    prompt = (
+        "Suggest one short and strong daily quote.\n\n"
+        f"Context:\n{headlines}\n\n"
+        f"Recently used quotes:\n{recent_poems}\n\n"
+        "Rules:\n"
+        "- English only\n"
+        "- One line only\n"
+        "- Keep it sharp and reflective\n"
+        "- Avoid repeating recent quotes\n"
+        "- Format: <quote> - <author>\n"
+    )
 
-        recent_poems = get_recent_poems()
-        headlines = news.get("global", []) + news.get("technology", []) + news.get("business", [])
-
-        prompt = f"""
-Ali için kısa ve güçlü bir günün dizesi öner.
-
-Bağlam:
-{headlines}
-
-Son günlerde kullanılan dizeler:
-{recent_poems}
-
-Kurallar:
-- Türkçe yaz
-- Tek satır olsun
-- Şair adıyla birlikte ver
-- Kısa, güçlü, sabah rutini tonuna uygun olsun
-- Fazla melankolik olmasın
-- Son kullanılanları tekrar etme
-- Format:
-“<dize>” – <şair>
-"""
-
-        response = requests.post(
-            "https://api.openai.com/v1/responses",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "gpt-4.1-mini",
-                "input": prompt,
-            },
-            timeout=20,
-        )
-
-        if response.status_code != 200:
-            return fallback
-
-        data = response.json()
-        text = safe_openai_text_response(data)
-
-        if not text:
-            return fallback
-
-        poem = text.strip()
-        save_recent_poem(poem)
-        return poem
-
-    except Exception:
+    out = ask_openai(prompt)
+    if not out:
         return fallback
 
+    poem = out.strip()
+    save_recent_poem(poem)
+    return poem
 
-
+# ---------------- CLOUD / PLATFORM RADAR ----------------
 CLOUD_PLATFORM_KEYWORDS = [
     "cloud", "iaas", "paas", "saas", "kubernetes", "openshift",
     "devops", "platform", "datacenter", "data center", "server",
@@ -863,7 +610,6 @@ def filter_cloud_platform_news(items, limit=3):
         score = sum(1 for k in CLOUD_PLATFORM_KEYWORDS if k in lower)
         if score > 0:
             scored.append((score, item))
-
     scored.sort(key=lambda x: (-x[0], x[1]))
     return [item for _, item in scored[:limit]]
 
@@ -883,39 +629,47 @@ def collect_cloud_platform_news():
                 seen.add(title)
 
     filtered = filter_cloud_platform_news(combined, limit=3)
+    return filtered if filtered else combined[:3]
 
-    if filtered:
-        return filtered
+def build_idea_engine(cloud_news):
+    ideas = []
 
-    return combined[:3]
+    for item in cloud_news:
+        lower = item.lower()
 
+        if "cost" in lower or "optimization" in lower:
+            ideas.append("Cost optimization trend -> Build a FinOps / cost visibility solution")
+        elif "kubernetes" in lower or "openshift" in lower:
+            ideas.append("Kubernetes adoption is rising -> Opportunity for a managed Kubernetes / platform service")
+        elif "edge" in lower:
+            ideas.append("Edge investment is increasing -> Opportunity for edge Kubernetes / telco edge platforms")
+        elif "telco" in lower or "network" in lower:
+            ideas.append("Telco cloud is growing -> Opportunity for a telco-specific PaaS / platform solution")
+        elif "cloud" in lower:
+            ideas.append("Cloud adoption is increasing -> Opportunity for migration / modernization services")
 
-# ---------------- HABER ----------------
-def get_news(url, n=3):
-    feed = feedparser.parse(url)
-    return [entry.title for entry in feed.entries[:n] if getattr(entry, "title", "").strip()]
+    if not ideas:
+        ideas.append("Cloud trends -> Evaluate general platform and managed service opportunities")
 
+    unique = []
+    for idea in ideas:
+        if idea not in unique:
+            unique.append(idea)
+    return unique[:3]
 
-def collect_news():
-    return {
-        "global": get_news("https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en", 3),
-        "technology": get_news("https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en", 2),
-        "business": get_news("https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en", 2),
-        "cloud_platform": collect_cloud_platform_news(),
-    }
-
-
-def bullets(items):
-    if not items:
-        return "- Veri alınamadı"
-    return "\n".join([f"- {item}" for item in items])
-
-
-
+# ---------------- PRIORITY / ACTION ----------------
+def map_priority_level(score):
+    if score < 10:
+        return "Low"
+    if score < 15:
+        return "Medium"
+    if score < 20:
+        return "Medium-High"
+    if score < 25:
+        return "High"
+    return "Critical"
 
 def build_top_priority_from_scores(aein_text):
-    import re
-
     scores = {
         "revenue": 5,
         "execution": 5,
@@ -939,191 +693,157 @@ def build_top_priority_from_scores(aein_text):
     level = map_priority_level(score)
 
     if scores["urgency"] >= 8:
-        focus = "Risk ve öncelik sadeleştirmesine odaklan; tek kritik işi öne al."
+        focus = "Focus on simplifying risk and priorities; elevate the single most critical item."
     elif scores["strategic"] >= 8 and scores["revenue"] >= 7:
-        focus = "Stratejik uyumu ve gelir etkisi yüksek tek AI/cloud başlığını somut aksiyona çevir."
+        focus = "Turn the one AI/cloud topic with high strategic fit and revenue impact into concrete action."
     elif scores["revenue"] >= 8:
-        focus = "Gelir etkisi yüksek fırsatları öne al; delivery gücünü zorlamadan ilerle."
+        focus = "Prioritize high revenue-impact opportunities while protecting delivery capacity."
     elif scores["execution"] >= 8:
-        focus = "Hızlı kazanım sağlayacak, uygulanması kolay tek işi bugün tamamla."
+        focus = "Complete one easy-to-execute quick win today."
     else:
-        focus = "Dağılmadan, stratejik uyumu en yüksek tek konuya odaklan."
+        focus = "Stay focused on the one topic with the highest strategic fit."
 
-    return f"Priority Score: {score}\nPriority Level: {level}\n🔥 Top Priority: {focus}"
+    return f"Priority Score: {score}\nPriority Level: {level}\nFocus: {focus}"
 
 def build_action_engine(aein_text, top_priority):
     lower = (aein_text + "\n" + top_priority).lower()
 
     if "risk" in lower and "urgency" in lower:
         return (
-            "- 1 kritik riski netleştir\n"
-            "- 1 acil kararı bugün kapat\n"
-            "- 1 dikkat dağıtan konuyu ertele"
+            "- Clarify 1 critical risk\n"
+            "- Close 1 urgent decision today\n"
+            "- Eliminate or postpone 1 distraction"
         )
 
     if "ai" in lower or "cloud" in lower or "strategic fit" in lower:
         return (
-            "- 1 AI/cloud fırsatını seç\n"
-            "- 1 somut use-case veya aksiyon tanımla\n"
-            "- 1 gereksiz gündemi bugünden çıkar"
+            "- Select 1 AI/cloud opportunity\n"
+            "- Define 1 concrete use case or action\n"
+            "- Remove 1 unnecessary agenda item today"
         )
 
     if "revenue" in lower:
         return (
-            "- 1 gelir etkisi yüksek fırsatı öne al\n"
-            "- 1 müşteri / teklif / çıktı başlığını ilerlet\n"
-            "- 1 düşük getirili işi ertele"
+            "- Prioritize 1 high revenue-impact opportunity\n"
+            "- Move forward 1 customer / proposal / output item\n"
+            "- Postpone 1 low-return task"
         )
 
     return (
-        "- 1 ana odağı seç\n"
-        "- 1 somut aksiyonu bugün tamamla\n"
-        "- 1 dikkat dağıtan işi ertele"
+        "- Select 1 main focus\n"
+        "- Complete 1 concrete action today\n"
+        "- Postpone 1 distracting task"
     )
 
+# ---------------- NEWS ----------------
+def get_news(url, n=3):
+    feed = feedparser.parse(url)
+    return [entry.title for entry in feed.entries[:n] if getattr(entry, "title", "").strip()]
 
+def collect_news():
+    return {
+        "global": get_news("https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en", 3),
+        "technology": get_news("https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en", 2),
+        "business": get_news("https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en", 2),
+        "cloud_platform": collect_cloud_platform_news(),
+    }
 
-def map_priority_level(score):
-    if score < 10:
-        return "Low"
-    elif score < 15:
-        return "Medium"
-    elif score < 20:
-        return "Medium-High"
-    elif score < 25:
-        return "High"
-    else:
-        return "Critical"
+def bullets(items):
+    if not items:
+        return "- Data unavailable"
+    return "\n".join([f"- {item}" for item in items])
 
-
-
-def build_idea_engine(cloud_news):
-    ideas = []
-
-    for item in cloud_news:
-        lower = item.lower()
-
-        if "cost" in lower or "optimization" in lower:
-            ideas.append("Cost optimization trendi → FinOps / cost visibility çözümü geliştir")
-
-        elif "kubernetes" in lower or "openshift" in lower:
-            ideas.append("Kubernetes yaygınlaşıyor → Managed Kubernetes / platform service fırsatı")
-
-        elif "edge" in lower:
-            ideas.append("Edge yatırımları artıyor → Edge Kubernetes / telco edge platform fırsatı")
-
-        elif "telco" in lower or "network" in lower:
-            ideas.append("Telco cloud büyüyor → Telco için özel PaaS / platform çözümü fırsatı")
-
-        elif "cloud" in lower:
-            ideas.append("Cloud adoption artıyor → Migration / modernization hizmet fırsatı")
-
-    if not ideas:
-        ideas.append("Cloud trendleri → Genel platform ve managed service fırsatları değerlendir")
-
-    # duplicate temizle
-    unique = []
-    for i in ideas:
-        if i not in unique:
-            unique.append(i)
-
-    return unique[:3]
-
-
-# ---------------- ANA İÇERİK ----------------
-def build_sabah_rutini(news, weather):
+# ---------------- MAIN CONTENT ----------------
+def build_daily_briefing(news, weather):
     global_news = news.get("global", [])[:3]
+    business_news = news.get("business", [])[:2]
     tech_news = news.get("technology", [])[:2]
     cloud_platform_news = news.get("cloud_platform", [])[:3]
-    business_news = news.get("business", [])[:2]
+    ideas = build_idea_engine(cloud_platform_news)
 
-    ayet = get_daily_ayah()
+    verse_ref, verse_text = get_daily_ayah()
     book_title, book_reason = generate_book_recommendation(news)
-    poem_text = generate_poem_line(news)
-    ai_text = generate_ai_insight(news)
-    aein_text = generate_aein_decision(news)
-    top_priority = build_top_priority_from_scores(aein_text)
-    action_engine = build_action_engine(aein_text, top_priority)
+    quote_text = generate_poem_line(news)
+    decision_text = generate_aein_decision(news)
+    top_priority = build_top_priority_from_scores(decision_text)
+    action_plan = build_action_engine(decision_text, top_priority)
+    exec_text = generate_ai_insight(news)
     english_text = generate_english_booster(news)
     speaking = generate_speaking_prompt(news)
 
     msg = []
-    msg.append("📌 *Sabah Haber Rutini*")
+    msg.append("📌 *Daily Briefing*")
     msg.append(f"🕔 {datetime.now().strftime('%d.%m.%Y %H:%M')}")
     msg.append("")
-    msg.append(f"🌤 *Hava Durumu:* {weather}")
+    msg.append(f"🌤 *Weather:* {weather}")
     msg.append("")
 
-    msg.append("*1) Günün Özeti*")
-    msg.append("Küresel akışta ana tema; makro gelişmeler, teknoloji yatırımları ve jeopolitik risklerin birlikte yön belirlemesi. Manşetleri tek tek değil, genel eğilim üzerinden okumak daha anlamlı.")
+    msg.append("*1) Summary*")
+    msg.append("The main global pattern today is the combined effect of macro developments, technology investments, and geopolitical risk. It is more useful to read the broader direction than individual headlines.")
     msg.append("")
 
-    msg.append("*2) Global Manşetler*")
+    msg.append("*2) Global Headlines*")
     msg.append(bullets(global_news))
     msg.append("")
 
-    msg.append("*3) Piyasa Snapshot*")
+    msg.append("*3) Market Snapshot*")
     msg.append(bullets(business_news))
     msg.append("")
 
     msg.append("*4) ☁️ Cloud / Platform Radar*")
-    ideas = build_idea_engine(cloud_platform_news)
     msg.append(bullets(cloud_platform_news))
     msg.append("")
 
-
-    msg.append("")
-    msg.append("*💡 Idea Engine*")
+    msg.append("*💡 Idea Signals*")
     msg.append(bullets(ideas))
+    msg.append("")
 
     msg.append("*5) AI / Tech Radar*")
     msg.append(bullets(tech_news))
     msg.append("")
 
-    msg.append("*6) English Booster (EN)*")
+    msg.append("*6) English Booster*")
     msg.append(english_text)
     msg.append("")
 
-    msg.append("*🎤 Speaking Practice (EN)*")
-    msg.append("Aşağıdaki soruya İngilizce 2-3 cümleyle cevap ver:")
+    msg.append("*🎤 Speaking Practice*")
+    msg.append("Answer the following question in 2-3 English sentences:")
     msg.append(speaking)
     msg.append("")
 
-    msg.append("*7) Günün Ayeti*")
-    msg.append(f"{ayet[1]} ({ayet[0]})")
+    msg.append("*7) Daily Reflection (Verse)*")
+    msg.append(f"{verse_text} ({verse_ref})")
     msg.append("")
 
-    msg.append("*8) Kitap Önerisi*")
+    msg.append("*8) Book Recommendation*")
     msg.append(book_title)
     msg.append(book_reason)
     msg.append("")
 
-    msg.append("*9) Günün Dizesi*")
-    msg.append(poem_text)
-
+    msg.append("*9) Daily Quote*")
+    msg.append(quote_text)
     msg.append("")
-    msg.append("*🧠 Karar Motoru*")
-    msg.append(aein_text)
 
+    msg.append("*🧠 Decision Insight*")
+    msg.append(decision_text)
     msg.append("")
-    msg.append("*🔥 Bugünün Önceliği*")
+
+    msg.append("*🔥 Top Priority*")
     msg.append(top_priority)
-
     msg.append("")
-    msg.append("*⚡ Aksiyon Motoru*")
-    msg.append(action_engine)
 
+    msg.append("*⚡ Action Plan*")
+    msg.append(action_plan)
     msg.append("")
-    msg.append("*🧠 Executive Insight (EN)*")
-    msg.append(ai_text)
+
+    msg.append("*🧠 Executive Insight*")
+    msg.append(exec_text)
 
     return "\n".join(msg)
 
-
-# ---------------- GÖNDERİM ----------------
+# ---------------- SEND ----------------
 def send(text):
     last_error = None
-
     for timeout_value in (15, 30):
         try:
             response = requests.post(
@@ -1135,13 +855,11 @@ def send(text):
             return
         except requests.exceptions.RequestException as e:
             last_error = e
-
     raise last_error
 
-
-# ---------------- ÇALIŞTIR ----------------
+# ---------------- RUN ----------------
 if __name__ == "__main__":
     news = collect_news()
     weather = get_weather()
-    message = build_sabah_rutini(news, weather)
+    message = build_daily_briefing(news, weather)
     send(message)
