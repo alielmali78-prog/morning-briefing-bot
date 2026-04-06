@@ -1,0 +1,23 @@
+{
+  "city": "Istanbul",
+  "language": "EN",
+  "sections": {
+    "weather": true,
+    "summary": true,
+    "global_headlines": true,
+    "market_snapshot": true,
+    "cloud_platform_radar": true,
+    "idea_signals": true,
+    "ai_tech_radar": true,
+    "english_booster": false,
+    "speaking_practice": false,
+    "daily_reflection": true,
+    "verse": false,
+    "quote": true,
+    "book_recommendation": true,
+    "decision_insight": true,
+    "top_priority": true,
+    "action_plan": true,
+    "executive_insight": true
+  }
+}

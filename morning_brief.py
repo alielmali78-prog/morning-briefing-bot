@@ -1,3 +1,8 @@
+
+
+
+
+
 #!/usr/bin/env python3
 from datetime import datetime
 from pathlib import Path
@@ -9,6 +14,59 @@ import re
 import feedparser
 import requests
 
+
+# ================= CONFIG SUPPORT =================
+
+CONFIG_FILE = Path(__file__).resolve().parent / "config.json"
+
+DEFAULT_CONFIG = {
+    "city": "Istanbul",
+    "language": "EN",
+    "sections": {
+        "weather": True,
+        "summary": True,
+        "global_headlines": True,
+        "market_snapshot": True,
+        "cloud_platform_radar": True,
+        "idea_signals": True,
+        "ai_tech_radar": True,
+        "english_booster": False,
+        "speaking_practice": False,
+        "daily_reflection": True,
+        "verse": False,
+        "quote": True,
+        "book_recommendation": True,
+        "decision_insight": True,
+        "top_priority": True,
+        "action_plan": True,
+        "executive_insight": True,
+    },
+}
+
+CITY_COORDINATES = {
+    "Istanbul": (41.01, 28.97),
+    "Berlin": (52.52, 13.41),
+    "London": (51.51, -0.13),
+    "Dubai": (25.20, 55.27),
+    "Doha": (25.29, 51.53),
+    "Ankara": (39.93, 32.86),
+    "Izmir": (38.42, 27.14),
+}
+
+def deep_merge(defaults, custom):
+    result = defaults.copy()
+    for key, value in custom.items():
+        if isinstance(value, dict) and isinstance(result.get(key), dict):
+            result[key] = deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+def load_config():
+    data = load_json_file(CONFIG_FILE, DEFAULT_CONFIG)
+    return deep_merge(DEFAULT_CONFIG, data)
+
+# ================= END CONFIG SUPPORT =================
 TOKEN = os.getenv("TG_TOKEN")
 CHAT_ID = os.getenv("TG_CHAT_ID")
 
@@ -363,14 +421,17 @@ def generate_speaking_prompt(news):
     return out if out else fallback
 
 # ---------------- WEATHER ----------------
-def get_weather():
+
+def get_weather(city="Istanbul"):
     try:
-        url = "https://api.open-meteo.com/v1/forecast?latitude=41.01&longitude=28.97&current_weather=true"
+        lat, lon = CITY_COORDINATES.get(city, CITY_COORDINATES["Istanbul"])
+        url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
         data = requests.get(url, timeout=10).json()
         temp = data["current_weather"]["temperature"]
-        return f"Istanbul: {temp}C"
+        return f"{city}: {temp}C"
     except Exception:
-        return "Istanbul: data unavailable"
+        return f"{city}: data unavailable"
+
 
 # ---------------- VERSE ----------------
 def read_quran_index():
@@ -594,6 +655,27 @@ def generate_poem_line(news):
     save_recent_poem(poem)
     return poem
 
+
+
+def build_reflection_block(config, verse_ref, verse_text, quote_text):
+    lines = []
+    sections = config.get("sections", {})
+
+    if not sections.get("daily_reflection", True):
+        return lines
+
+    if sections.get("verse", False):
+        lines.append("*7) Daily Reflection (Verse)*")
+        lines.append(f"{verse_text} ({verse_ref})")
+        lines.append("")
+
+    if sections.get("quote", True):
+        lines.append("*9) Daily Quote*")
+        lines.append(quote_text)
+        lines.append("")
+
+    return lines
+
 # ---------------- CLOUD / PLATFORM RADAR ----------------
 CLOUD_PLATFORM_KEYWORDS = [
     "cloud", "iaas", "paas", "saas", "kubernetes", "openshift",
@@ -755,6 +837,9 @@ def bullets(items):
 
 # ---------------- MAIN CONTENT ----------------
 def build_daily_briefing(news, weather):
+    config = load_config()
+    sections = config.get("sections", {})
+
     global_news = news.get("global", [])[:3]
     business_news = news.get("business", [])[:2]
     tech_news = news.get("technology", [])[:2]
@@ -775,69 +860,78 @@ def build_daily_briefing(news, weather):
     msg.append("📌 *Daily Briefing*")
     msg.append(f"🕔 {datetime.now().strftime('%d.%m.%Y %H:%M')}")
     msg.append("")
-    msg.append(f"🌤 *Weather:* {weather}")
-    msg.append("")
 
-    msg.append("*1) Summary*")
-    msg.append("The main global pattern today is the combined effect of macro developments, technology investments, and geopolitical risk. It is more useful to read the broader direction than individual headlines.")
-    msg.append("")
+    if sections.get("weather", True):
+        msg.append(f"🌤 *Weather:* {weather}")
+        msg.append("")
 
-    msg.append("*2) Global Headlines*")
-    msg.append(bullets(global_news))
-    msg.append("")
+    if sections.get("summary", True):
+        msg.append("*1) Summary*")
+        msg.append("The main global pattern today is the combined effect of macro developments, technology investments, and geopolitical risk. It is more useful to read the broader direction than individual headlines.")
+        msg.append("")
 
-    msg.append("*3) Market Snapshot*")
-    msg.append(bullets(business_news))
-    msg.append("")
+    if sections.get("global_headlines", True):
+        msg.append("*2) Global Headlines*")
+        msg.append(bullets(global_news))
+        msg.append("")
 
-    msg.append("*4) ☁️ Cloud / Platform Radar*")
-    msg.append(bullets(cloud_platform_news))
-    msg.append("")
+    if sections.get("market_snapshot", True):
+        msg.append("*3) Market Snapshot*")
+        msg.append(bullets(business_news))
+        msg.append("")
 
-    msg.append("*💡 Idea Signals*")
-    msg.append(bullets(ideas))
-    msg.append("")
+    if sections.get("cloud_platform_radar", True):
+        msg.append("*4) ☁️ Cloud / Platform Radar*")
+        msg.append(bullets(cloud_platform_news))
+        msg.append("")
 
-    msg.append("*5) AI / Tech Radar*")
-    msg.append(bullets(tech_news))
-    msg.append("")
+    if sections.get("idea_signals", True):
+        msg.append("*💡 Idea Signals*")
+        msg.append(bullets(ideas))
+        msg.append("")
 
-    msg.append("*6) English Booster*")
-    msg.append(english_text)
-    msg.append("")
+    if sections.get("ai_tech_radar", True):
+        msg.append("*5) AI / Tech Radar*")
+        msg.append(bullets(tech_news))
+        msg.append("")
 
-    msg.append("*🎤 Speaking Practice*")
-    msg.append("Answer the following question in 2-3 English sentences:")
-    msg.append(speaking)
-    msg.append("")
+    if sections.get("english_booster", False):
+        msg.append("*6) English Booster*")
+        msg.append(english_text)
+        msg.append("")
 
-    msg.append("*7) Daily Reflection (Verse)*")
-    msg.append(f"{verse_text} ({verse_ref})")
-    msg.append("")
+    if sections.get("speaking_practice", False):
+        msg.append("*🎤 Speaking Practice*")
+        msg.append("Answer the following question in 2-3 English sentences:")
+        msg.append(speaking)
+        msg.append("")
 
-    msg.append("*8) Book Recommendation*")
-    msg.append(book_title)
-    msg.append(book_reason)
-    msg.append("")
+    if sections.get("book_recommendation", True):
+        msg.append("*8) Book Recommendation*")
+        msg.append(book_title)
+        msg.append(book_reason)
+        msg.append("")
 
-    msg.append("*9) Daily Quote*")
-    msg.append(quote_text)
-    msg.append("")
+    msg.extend(build_reflection_block(config, verse_ref, verse_text, quote_text))
 
-    msg.append("*🧠 Decision Insight*")
-    msg.append(decision_text)
-    msg.append("")
+    if sections.get("decision_insight", True):
+        msg.append("*🧠 Decision Insight*")
+        msg.append(decision_text)
+        msg.append("")
 
-    msg.append("*🔥 Top Priority*")
-    msg.append(top_priority)
-    msg.append("")
+    if sections.get("top_priority", True):
+        msg.append("*🔥 Top Priority*")
+        msg.append(top_priority)
+        msg.append("")
 
-    msg.append("*⚡ Action Plan*")
-    msg.append(action_plan)
-    msg.append("")
+    if sections.get("action_plan", True):
+        msg.append("*⚡ Action Plan*")
+        msg.append(action_plan)
+        msg.append("")
 
-    msg.append("*🧠 Executive Insight*")
-    msg.append(exec_text)
+    if sections.get("executive_insight", True):
+        msg.append("*🧠 Executive Insight*")
+        msg.append(exec_text)
 
     return "\n".join(msg)
 
@@ -858,8 +952,10 @@ def send(text):
     raise last_error
 
 # ---------------- RUN ----------------
+
 if __name__ == "__main__":
+    config = load_config()
     news = collect_news()
-    weather = get_weather()
+    weather = get_weather(config.get("city", "Istanbul"))
     message = build_daily_briefing(news, weather)
     send(message)
