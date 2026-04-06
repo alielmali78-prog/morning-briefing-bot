@@ -836,9 +836,11 @@ def bullets(items):
     return "\n".join([f"- {item}" for item in items])
 
 # ---------------- MAIN CONTENT ----------------
+
 def build_daily_briefing(news, weather):
     config = load_config()
     sections = config.get("sections", {})
+    lang = config.get("language", "EN")
 
     global_news = news.get("global", [])[:3]
     business_news = news.get("business", [])[:2]
@@ -857,41 +859,67 @@ def build_daily_briefing(news, weather):
     speaking = generate_speaking_prompt(news)
 
     msg = []
-    msg.append("📌 *Daily Briefing*")
+    if lang == "TR":
+        msg.append("📌 *Günlük Brifing*")
+    else:
+        msg.append("📌 *Daily Briefing*")
+
     msg.append(f"🕔 {datetime.now().strftime('%d.%m.%Y %H:%M')}")
     msg.append("")
 
     if sections.get("weather", True):
-        msg.append(f"🌤 *Weather:* {weather}")
+        if lang == "TR":
+            msg.append(f"🌤 *Hava Durumu:* {weather}")
+        else:
+            msg.append(f"🌤 *Weather:* {weather}")
         msg.append("")
 
     if sections.get("summary", True):
-        msg.append("*1) Summary*")
-        msg.append("The main global pattern today is the combined effect of macro developments, technology investments, and geopolitical risk. It is more useful to read the broader direction than individual headlines.")
+        if lang == "TR":
+            msg.append("*1) Günün Özeti*")
+            msg.append("Bugünün ana resmi; makro gelişmelerin, teknoloji yatırımlarının ve jeopolitik risklerin birlikte yön belirlemesidir. Tek tek manşetlerden çok genel yönü okumak daha anlamlıdır.")
+        else:
+            msg.append("*1) Summary*")
+            msg.append("The main global pattern today is the combined effect of macro developments, technology investments, and geopolitical risk. It is more useful to read the broader direction than individual headlines.")
         msg.append("")
 
     if sections.get("global_headlines", True):
-        msg.append("*2) Global Headlines*")
+        if lang == "TR":
+            msg.append("*2) Global Manşetler*")
+        else:
+            msg.append("*2) Global Headlines*")
         msg.append(bullets(global_news))
         msg.append("")
 
     if sections.get("market_snapshot", True):
-        msg.append("*3) Market Snapshot*")
+        if lang == "TR":
+            msg.append("*3) Piyasa Özeti*")
+        else:
+            msg.append("*3) Market Snapshot*")
         msg.append(bullets(business_news))
         msg.append("")
 
     if sections.get("cloud_platform_radar", True):
-        msg.append("*4) ☁️ Cloud / Platform Radar*")
+        if lang == "TR":
+            msg.append("*4) ☁️ Bulut / Platform Radarı*")
+        else:
+            msg.append("*4) ☁️ Cloud / Platform Radar*")
         msg.append(bullets(cloud_platform_news))
         msg.append("")
 
     if sections.get("idea_signals", True):
-        msg.append("*💡 Idea Signals*")
+        if lang == "TR":
+            msg.append("*💡 Fikir Sinyalleri*")
+        else:
+            msg.append("*💡 Idea Signals*")
         msg.append(bullets(ideas))
         msg.append("")
 
     if sections.get("ai_tech_radar", True):
-        msg.append("*5) AI / Tech Radar*")
+        if lang == "TR":
+            msg.append("*5) AI / Teknoloji Radarı*")
+        else:
+            msg.append("*5) AI / Tech Radar*")
         msg.append(bullets(tech_news))
         msg.append("")
 
@@ -902,12 +930,18 @@ def build_daily_briefing(news, weather):
 
     if sections.get("speaking_practice", False):
         msg.append("*🎤 Speaking Practice*")
-        msg.append("Answer the following question in 2-3 English sentences:")
+        if lang == "TR":
+            msg.append("Aşağıdaki soruyu İngilizce 2-3 cümleyle yanıtla:")
+        else:
+            msg.append("Answer the following question in 2-3 English sentences:")
         msg.append(speaking)
         msg.append("")
 
     if sections.get("book_recommendation", True):
-        msg.append("*8) Book Recommendation*")
+        if lang == "TR":
+            msg.append("*8) Kitap Önerisi*")
+        else:
+            msg.append("*8) Book Recommendation*")
         msg.append(book_title)
         msg.append(book_reason)
         msg.append("")
@@ -915,25 +949,38 @@ def build_daily_briefing(news, weather):
     msg.extend(build_reflection_block(config, verse_ref, verse_text, quote_text))
 
     if sections.get("decision_insight", True):
-        msg.append("*🧠 Decision Insight*")
+        if lang == "TR":
+            msg.append("*🧠 Karar İçgörüsü*")
+        else:
+            msg.append("*🧠 Decision Insight*")
         msg.append(decision_text)
         msg.append("")
 
     if sections.get("top_priority", True):
-        msg.append("*🔥 Top Priority*")
+        if lang == "TR":
+            msg.append("*🔥 En Yüksek Öncelik*")
+        else:
+            msg.append("*🔥 Top Priority*")
         msg.append(top_priority)
         msg.append("")
 
     if sections.get("action_plan", True):
-        msg.append("*⚡ Action Plan*")
+        if lang == "TR":
+            msg.append("*⚡ Aksiyon Planı*")
+        else:
+            msg.append("*⚡ Action Plan*")
         msg.append(action_plan)
         msg.append("")
 
     if sections.get("executive_insight", True):
-        msg.append("*🧠 Executive Insight*")
+        if lang == "TR":
+            msg.append("*🧠 Yönetici İçgörüsü*")
+        else:
+            msg.append("*🧠 Executive Insight*")
         msg.append(exec_text)
 
     return "\n".join(msg)
+
 
 # ---------------- SEND ----------------
 def send(text):

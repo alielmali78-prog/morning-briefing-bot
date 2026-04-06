@@ -1,6 +1,6 @@
 {
   "city": "Istanbul",
-  "language": "EN",
+  "language": "TR",
   "sections": {
     "weather": true,
     "summary": true,
@@ -10,9 +10,9 @@
     "idea_signals": true,
     "ai_tech_radar": true,
     "english_booster": false,
-    "speaking_practice": false,
+    "speaking_practice": true, 
     "daily_reflection": true,
-    "verse": false,
+    "verse": true,
     "quote": true,
     "book_recommendation": true,
     "decision_insight": true,
