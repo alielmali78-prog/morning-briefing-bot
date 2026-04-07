@@ -1,5 +1,75 @@
 
 
+TR_QUOTES = [
+"Umutsuz durumlar yoktur, umutsuz insanlar vardır. - Atatürk",
+"Hayat kısa, kuşlar uçuyor. - Cemal Süreya",
+"Her şey insanın içinde saklıdır. - Sıtkı Erinç",
+"Ya olduğun gibi görün ya göründüğün gibi ol. - Mevlana",
+"İnsan, alışkanlıklarının toplamıdır. - Aristoteles"
+]
+
+TR_VERSES = [
+("İnşirah 5", "Şüphesiz zorlukla beraber bir kolaylık vardır."),
+("Bakara 286", "Allah hiç kimseye gücünün yettiğinden fazlasını yüklemez."),
+("Rad 28", "Kalpler ancak Allah'ı anmakla huzur bulur."),
+("Talak 3", "Kim Allah'a tevekkül ederse O ona yeter."),
+("Yunus 62", "Allah'ın dostlarına korku yoktur.")
+]
+
+
+
+def tr_translate(text, lang):
+    if lang != "TR":
+        return text
+
+    pairs = {
+        "Theme:": "Ana tema:",
+        "Opportunity:": "Fırsat:",
+        "Recommendation:": "Öneri:",
+        "Decision:": "Karar:",
+        "Score:": "Skor:",
+        "Revenue Impact": "Gelir Etkisi",
+        "Execution Ease": "Uygulama Kolaylığı",
+        "Strategic Fit": "Stratejik Uyum",
+        "Urgency": "Aciliyet",
+        "Bugün için öneri": "Bugün için öneri",
+        "- Do:": "- Yap:",
+        "- Watch:": "- Dikkat et:",
+        "- Track:": "- İzle:",
+        "Focus:": "Odak:",
+        "Öncelik Skoru": "Öncelik Skoru",
+        "Priority Level": "Öncelik Seviyesi",
+
+        "Technology-led developments are creating a strong strategic positioning moment.": "Teknoloji odaklı gelişmeler güçlü bir stratejik konumlanma anı oluşturuyor.",
+        "Poor prioritization could waste a valuable opportunity window.": "Yanlış önceliklendirme değerli bir fırsat penceresini boşa harcayabilir.",
+        "Operational efficiency and focused execution can create advantage.": "Operasyonel verimlilik ve odaklı execution avantaj yaratabilir.",
+        "Map AI and cloud developments directly to high-impact business outcomes.": "AI ve cloud gelişmelerini yüksek etkili iş sonuçlarıyla doğrudan eşleştir.",
+        "Turn one high strategic-fit topic into concrete action today.": "Stratejik uyumu en yüksek tek başlığı bugün somut aksiyona çevir.",
+        "Stay focused on the one topic with the highest strategic fit.": "Stratejik uyumu en yüksek tek konuya odaklan.",
+
+        "Geopolitical risks are directly affecting technology and markets.": "Jeopolitik riskler teknoloji ve piyasaları doğrudan etkiliyor.",
+        "Reactive decision-making and energy-cost pressure.": "Reaktif karar alma ve enerji maliyeti baskısı.",
+        "The right positioning creates advantage during uncertainty.": "Belirsizlik dönemlerinde doğru konumlanma avantaj yaratır.",
+        "Simplify the agenda and choose one main objective.": "Gündemi sadeleştir ve tek bir ana hedef seç.",
+        "Avoid spreading attention across low-value tasks.": "Düşük değerli işlere dağılma.",
+        "The intersection of AI, cloud, and market dynamics.": "AI, cloud ve piyasa dinamiklerinin kesişimi.",
+
+        "- Clarify 1 critical risk": "- 1 kritik riski netleştir",
+        "- Close 1 urgent decision today": "- 1 acil kararı bugün kapat",
+        "- Eliminate or postpone 1 distraction": "- 1 dikkat dağıtan konuyu ertele veya kaldır",
+
+        "Telco cloud is growing -> Opportunity for a telco-specific PaaS / platform solution": "Telco cloud büyüyor -> Telco'ya özel PaaS / platform çözümü fırsatı",
+
+        "Why today:": "Neden bugün:"
+    }
+
+    for k,v in pairs.items():
+        text = text.replace(k,v)
+
+    return text
+
+
+
 
 
 
@@ -256,7 +326,7 @@ def build_smart_exec_fallback(news):
         f"Theme: {theme}\n"
         f"Risk: {risk}\n"
         f"Opportunity: {opportunity}\n"
-        f"Today's Recommendation:\n"
+        f"Bugün için öneri:\n"
         f"- Do: Simplify the agenda and choose one main objective.\n"
         f"- Watch: Avoid spreading attention across low-value tasks.\n"
         f"- Track: The intersection of AI, cloud, and market dynamics."
@@ -300,7 +370,7 @@ def generate_ai_insight(news):
         "Theme:\n"
         "Risk:\n"
         "Opportunity:\n"
-        "Today's Recommendation:\n"
+        "Bugün için öneri:\n"
         "- Do:\n"
         "- Watch:\n"
         "- Track:\n"
@@ -785,7 +855,7 @@ def build_top_priority_from_scores(aein_text):
     else:
         focus = "Stay focused on the one topic with the highest strategic fit."
 
-    return f"Priority Score: {score}\nPriority Level: {level}\nFocus: {focus}"
+    return f"Öncelik Skoru: {score}\nPriority Level: {level}\nFocus: {focus}"
 
 def build_action_engine(aein_text, top_priority):
     lower = (aein_text + "\n" + top_priority).lower()
@@ -979,6 +1049,7 @@ def build_daily_briefing(news, weather):
             msg.append("*🧠 Executive Insight*")
         msg.append(exec_text)
 
+    msg = [tr_translate(x, lang) for x in msg]
     return "\n".join(msg)
 
 
