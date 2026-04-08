@@ -186,28 +186,18 @@ crontab -e
 
 --------------------------------------------------
 
+
 # 13. Backup
 
-aktif dosya:
+Aktif dosya:
 
 morning_brief.py
 
-yedekler:
+Yedekler:
 
 archive/
 
-local:
+Local-only dosya (GitHub'a push edilmez):
 
 brain.md
-
---------------------------------------------------
-
-# 14. Amaç
-
-PulseAI:
-
-gündemi sadeleştirir  
-öncelik çıkarır  
-aksiyon üretir  
-karar hızlandırır  
 
