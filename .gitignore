@@ -9,3 +9,6 @@ archive/
 *.swp
 __pycache__/
 *.broken.py
+brain.md
+brain.local.backup.*.md
+archive/
