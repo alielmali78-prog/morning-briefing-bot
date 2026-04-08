@@ -1,4 +1,28 @@
 
+TR_CLOUD_SOURCES = [
+    "https://webrazzi.com/feed/",
+    "https://www.cio.com.tr/feed/",
+    "https://www.bthaber.com/feed/"
+]
+
+
+TR_NEWS_SOURCES = {
+    "global": [
+        "https://www.aa.com.tr/tr/rss/default?cat=guncel",
+        "https://www.trthaber.com/rss/manset.rss",
+        "https://www.bbc.com/turkce/index.xml"
+    ],
+    "technology": [
+        "https://webrazzi.com/feed/",
+        "https://www.donanimhaber.com/rss/tum/",
+    ],
+    "business": [
+        "https://www.bloomberght.com/rss",
+        "https://www.ekonomim.com/rss"
+    ]
+}
+
+
 
 def tr_translate(text, lang):
     if lang != "TR":
@@ -783,7 +807,7 @@ def build_idea_engine(cloud_news):
             ideas.append("Cloud adoption is increasing -> Opportunity for migration / modernization services")
 
     if not ideas:
-        ideas.append("Cloud trends -> Evaluate general platform and managed service opportunities")
+        ideas.append("Cloud trendleri artıyor -> platform ve managed service fırsatlarını değerlendir")
 
     unique = []
     for idea in ideas:
@@ -874,12 +898,24 @@ def get_news(url, n=3):
     feed = feedparser.parse(url)
     return [entry.title for entry in feed.entries[:n] if getattr(entry, "title", "").strip()]
 
+
 def collect_news():
+    config = load_config()
+    lang = config.get("language","EN")
+
+    if lang == "TR":
+        return {
+            "global": sum([get_news(x,1) for x in TR_NEWS_SOURCES["global"]],[])[:3],
+            "technology": sum([get_news(x,1) for x in TR_NEWS_SOURCES["technology"]],[])[:2],
+            "business": sum([get_news(x,1) for x in TR_NEWS_SOURCES["business"]],[])[:2],
+            "cloud_platform": sum([get_news(x,1) for x in TR_CLOUD_SOURCES],[])[:3],
+        }
+
     return {
         "global": get_news("https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en", 3),
         "technology": get_news("https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en", 2),
         "business": get_news("https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en", 2),
-        "cloud_platform": collect_cloud_platform_news(),
+        "cloud_platform": sum([get_news(x,1) for x in TR_CLOUD_SOURCES],[])[:3],
     }
 
 def bullets(items):
