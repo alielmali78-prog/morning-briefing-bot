@@ -66,7 +66,7 @@ def tr_translate(text, lang):
 
         "Telco cloud is growing -> Opportunity for a telco-specific PaaS / platform solution": "Telco cloud büyüyor -> Telco'ya özel PaaS / platform çözümü fırsatı",
 
-        "Why today:": "Neden bugün:"
+        "Neden bugün:": "Neden bugün:"
     }
 
     for k,v in pairs.items():
@@ -539,7 +539,7 @@ def fetch_ayah_from_api(global_ayah_number: int):
 
     return ("Verse unavailable", "Verse data is unavailable today.")
 
-def get_daily_ayah():
+def get_daily_ayah_tr():
     idx = read_quran_index()
     ref, text = fetch_ayah_from_api(idx)
     next_idx = idx + 1
@@ -566,13 +566,13 @@ BOOK_FALLBACKS = {
 }
 
 BOOK_REASON_FALLBACKS = {
-    "Co-Intelligence - Ethan Mollick": "Why today: It offers a practical perspective on integrating AI into everyday workflows.",
-    "The Coming Wave - Mustafa Suleyman": "Why today: It helps frame the balance between AI, regulation, and strategic risk.",
-    "Empire of AI - Karen Hao": "Why today: It gives a clearer view of power dynamics and competition in the AI ecosystem.",
-    "Lead Bigger - Anne Chow": "Why today: It helps build leadership impact more systematically during transformation periods.",
-    "Working Backwards - Colin Bryar and Bill Carr": "Why today: It explains a customer-centric and disciplined execution culture.",
-    "Reshuffle - Sangeet Paul Choudary": "Why today: It helps you better understand platforms, business models, and changing competitive dynamics.",
-    "Competing in the Age of AI - Marco Iansiti and Karim R. Lakhani": "Why today: It clarifies business-model and organizational impact in the age of AI.",
+    "Co-Intelligence - Ethan Mollick": "Neden bugün: Yapay zekâyı günlük iş akışlarına entegre etmek için pratik bir bakış sunar.",
+    "The Coming Wave - Mustafa Suleyman": "Neden bugün: Yapay zekâ, regülasyon ve stratejik risk arasındaki dengeyi anlamaya yardımcı olur.",
+    "Empire of AI - Karen Hao": "Neden bugün: Yapay zekâ ekosistemindeki rekabet ve güç dinamiklerini daha net görmeyi sağlar.",
+    "Lead Bigger - Anne Chow": "Neden bugün: Dönüşüm dönemlerinde liderlik etkisini daha sistematik kurmaya yardımcı olur.",
+    "Working Backwards - Colin Bryar and Bill Carr": "Neden bugün: Müşteri odaklı ve disiplinli uygulama kültürünü anlaşılır şekilde açıklar.",
+    "Reshuffle - Sangeet Paul Choudary": "Neden bugün: It helps you better understand platforms, business models, and changing competitive dynamics.",
+    "Competing in the Age of AI - Marco Iansiti and Karim R. Lakhani": "Neden bugün: It clarifies business-model and organizational impact in the age of AI.",
 }
 
 def flatten_book_pool():
@@ -626,7 +626,7 @@ def choose_fallback_book(news):
         filtered = flatten_book_pool()
 
     chosen = random.choice(filtered)
-    reason = BOOK_REASON_FALLBACKS.get(chosen, "Why today: It is a strong reading recommendation aligned with the day's main theme.")
+    reason = BOOK_REASON_FALLBACKS.get(chosen, "Neden bugün: It is a strong reading recommendation aligned with the day's main theme.")
     save_recent_book(chosen)
     return chosen, reason
 
@@ -645,7 +645,7 @@ def generate_book_recommendation(news):
         "- Do not repeat recent suggestions\n"
         "- Output exactly two lines\n"
         "- Line 1: Book: <title> - <author>\n"
-        "- Line 2: Why today: <one-sentence reason in English>\n"
+        "- Line 2: Neden bugün: <one-sentence reason in English>\n"
     )
 
     out = ask_openai(prompt)
@@ -664,7 +664,7 @@ def generate_book_recommendation(news):
     else:
         book_title = raw_book_line.strip()
 
-    reason = raw_reason_line if raw_reason_line.startswith("Why today:") else f"Why today: {raw_reason_line}"
+    reason = raw_reason_line if raw_reason_line.startswith("Neden bugün:") else f"Neden bugün: {raw_reason_line}"
 
     if not book_title:
         return fallback_book, fallback_reason
@@ -706,26 +706,14 @@ def choose_fallback_poem():
     save_recent_poem(chosen)
     return chosen
 
-def generate_poem_line(news):
-    fallback = choose_fallback_poem()
-
-    headlines = news.get("global", []) + news.get("technology", []) + news.get("business", []) + news.get("cloud_platform", [])
-    recent_poems = get_recent_poems()
-    prompt = (
-        "Suggest one short and strong daily quote.\n\n"
-        f"Context:\n{headlines}\n\n"
-        f"Recently used quotes:\n{recent_poems}\n\n"
-        "Rules:\n"
-        "- English only\n"
-        "- One line only\n"
-        "- Keep it sharp and reflective\n"
-        "- Avoid repeating recent quotes\n"
-        "- Format: <quote> - <author>\n"
-    )
-
-    out = ask_openai(prompt)
-    if not out:
-        return fallback
+def generate_poem_line(news=None):
+    return random.choice([
+        "Hayat kısa, kuşlar uçuyor. - Cemal Süreya",
+        "Ya olduğun gibi görün ya göründüğün gibi ol. - Mevlana",
+        "Her şey insanın içinde saklıdır. - Sıtkı Erinç",
+        "İnsan yaşadığı yere benzer. - Edip Cansever",
+        "Umutsuz durumlar yoktur, umutsuz insanlar vardır. - Atatürk"
+    ])
 
     poem = out.strip()
     save_recent_poem(poem)
@@ -741,12 +729,12 @@ def build_reflection_block(config, verse_ref, verse_text, quote_text):
         return lines
 
     if sections.get("verse", False):
-        lines.append("*7) Daily Reflection (Verse)*")
+        lines.append("*9) Günlük Yansıma (Ayet)*")
         lines.append(f"{verse_text} ({verse_ref})")
         lines.append("")
 
     if sections.get("quote", True):
-        lines.append("*9) Daily Quote*")
+        lines.append("*10) Günün Sözü*")
         lines.append(quote_text)
         lines.append("")
 
@@ -936,9 +924,9 @@ def build_daily_briefing(news, weather):
     cloud_platform_news = news.get("cloud_platform", [])[:3]
     ideas = build_idea_engine(cloud_platform_news)
 
-    verse_ref, verse_text = get_daily_ayah()
+    verse_ref, verse_text = get_daily_ayah_tr()
     book_title, book_reason = generate_book_recommendation(news)
-    quote_text = generate_poem_line(news)
+    quote_text = generate_quote_tr()
     decision_text = generate_aein_decision(news)
     top_priority = build_top_priority_from_scores(decision_text)
     action_plan = build_action_engine(decision_text, top_priority)
@@ -997,7 +985,7 @@ def build_daily_briefing(news, weather):
 
     if sections.get("idea_signals", True):
         if lang == "TR":
-            msg.append("*💡 Fikir Sinyalleri*")
+            msg.append("*5) 💡 Fikir Sinyalleri*")
         else:
             msg.append("*💡 Idea Signals*")
         msg.append(bullets(ideas))
@@ -1005,7 +993,7 @@ def build_daily_briefing(news, weather):
 
     if sections.get("ai_tech_radar", True):
         if lang == "TR":
-            msg.append("*5) AI / Teknoloji Radarı*")
+            msg.append("*6) AI / Teknoloji Radarı*")
         else:
             msg.append("*5) AI / Tech Radar*")
         msg.append(bullets(tech_news))
@@ -1017,7 +1005,7 @@ def build_daily_briefing(news, weather):
         msg.append("")
 
     if sections.get("speaking_practice", False):
-        msg.append("*🎤 Speaking Practice*")
+        msg.append("*7) 🎤 Speaking Practice*")
         if lang == "TR":
             msg.append("Aşağıdaki soruyu İngilizce 2-3 cümleyle yanıtla:")
         else:
@@ -1038,7 +1026,7 @@ def build_daily_briefing(news, weather):
 
     if sections.get("decision_insight", True):
         if lang == "TR":
-            msg.append("*🧠 Karar İçgörüsü*")
+            msg.append("*11) 🧠 Karar İçgörüsü*")
         else:
             msg.append("*🧠 Decision Insight*")
         msg.append(decision_text)
@@ -1046,7 +1034,7 @@ def build_daily_briefing(news, weather):
 
     if sections.get("top_priority", True):
         if lang == "TR":
-            msg.append("*🔥 En Yüksek Öncelik*")
+            msg.append("*12) 🔥 En Yüksek Öncelik*")
         else:
             msg.append("*🔥 Top Priority*")
         msg.append(top_priority)
@@ -1054,7 +1042,7 @@ def build_daily_briefing(news, weather):
 
     if sections.get("action_plan", True):
         if lang == "TR":
-            msg.append("*⚡ Aksiyon Planı*")
+            msg.append("*13) ⚡ Aksiyon Planı*")
         else:
             msg.append("*⚡ Action Plan*")
         msg.append(action_plan)
@@ -1062,7 +1050,7 @@ def build_daily_briefing(news, weather):
 
     if sections.get("executive_insight", True):
         if lang == "TR":
-            msg.append("*🧠 Yönetici İçgörüsü*")
+            msg.append("*14) 🧠 Yönetici İçgörüsü*")
         else:
             msg.append("*🧠 Executive Insight*")
         msg.append(exec_text)
@@ -1087,6 +1075,24 @@ def send(text):
             last_error = e
     raise last_error
 
+# -------- TR HELPERS --------
+
+def get_daily_ayah_tr():
+    return random.choice([
+        ("Bakara 286","Allah hiç kimseye gücünün yettiğinden fazlasını yüklemez."),
+        ("Rad 28","Kalpler ancak Allah'ı anmakla huzur bulur."),
+        ("İnşirah 5","Şüphesiz zorlukla beraber bir kolaylık vardır."),
+        ("Talak 3","Kim Allah'a tevekkül ederse O ona yeter.")
+    ])
+
+def generate_quote_tr():
+    return random.choice([
+        "Hayat kısa, kuşlar uçuyor. - Cemal Süreya",
+        "Ya olduğun gibi görün ya göründüğün gibi ol. - Mevlana",
+        "Her şey insanın içinde saklıdır. - Sıtkı Erinç",
+        "İnsan yaşadığı yere benzer. - Edip Cansever"
+    ])
+
 # ---------------- RUN ----------------
 
 if __name__ == "__main__":
@@ -1095,3 +1101,4 @@ if __name__ == "__main__":
     weather = get_weather(config.get("city", "Istanbul"))
     message = build_daily_briefing(news, weather)
     send(message)
+
