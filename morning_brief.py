@@ -1,23 +1,5 @@
 
 
-TR_QUOTES = [
-"Umutsuz durumlar yoktur, umutsuz insanlar vardır. - Atatürk",
-"Hayat kısa, kuşlar uçuyor. - Cemal Süreya",
-"Her şey insanın içinde saklıdır. - Sıtkı Erinç",
-"Ya olduğun gibi görün ya göründüğün gibi ol. - Mevlana",
-"İnsan, alışkanlıklarının toplamıdır. - Aristoteles"
-]
-
-TR_VERSES = [
-("İnşirah 5", "Şüphesiz zorlukla beraber bir kolaylık vardır."),
-("Bakara 286", "Allah hiç kimseye gücünün yettiğinden fazlasını yüklemez."),
-("Rad 28", "Kalpler ancak Allah'ı anmakla huzur bulur."),
-("Talak 3", "Kim Allah'a tevekkül ederse O ona yeter."),
-("Yunus 62", "Allah'ın dostlarına korku yoktur.")
-]
-
-
-
 def tr_translate(text, lang):
     if lang != "TR":
         return text
