@@ -1,34 +1,51 @@
-# Morning Briefing Bot (TR)
+# PulseAI
+Yapay zekâ destekli günlük karar ve aksiyon motoru
 
-Telegram üzerinden günlük yönetici brifingi üreten, Türkçe kaynaklarla çalışan ve yapılandırılabilir briefing bot.
+## 🎯 PulseAI nedir?
 
-## Genel Amaç
+PulseAI bir haber botu değildir.  
+PulseAI, bilgiyi şu çıktılara dönüştüren **günlük karar sistemidir**:
 
-Bu proje, her gün tek mesajda şu alanları özetleyen bir briefing üretir:
+- İçgörü
+- Öncelik
+- Aksiyon
+- Fırsat
 
-- gündemin genel görünümü
-- piyasa ve ekonomi gelişmeleri
-- bulut / platform trendleri
-- yapay zeka / teknoloji sinyalleri
-- yönetici içgörüleri
-- aksiyon önerileri
-- speaking practice
-- kitap önerisi
-- günlük yansıma ve günün sözü
+Her gün tek mesajda yönetici seviyesinde briefing üretir.
 
-## Öne Çıkan Özellikler
+---
 
-- 14 bölümlü sabit briefing yapısı
-- Türkçe haber kaynakları
-- Cloud / Platform ve AI / Teknoloji ayrımı
-- tekrar eden haberleri azaltma mantığı
-- spam / ihale tarzı içerikleri filtreleme
-- Türkçe ayet ve Türkçe söz
-- yönetici odaklı karar içgörüsü
-- Telegram gönderimi
-- config.json ile kontrol edilebilir yapı
+## 🔥 Örnek Çıktı
 
-## Bölüm Yapısı
+🔥 En Yüksek Öncelik  
+Öncelik Skoru: 20  
+Öncelik Seviyesi: High  
+
+⚡ Aksiyon Planı
+
+- 1 kritik riski netleştir  
+- 1 acil kararı bugün kapat  
+- 1 dikkat dağıtan konuyu kaldır  
+
+---
+
+## 🧠 Temel Kabiliyetler
+
+- Karar İçgörüsü Motoru
+- Öncelik Motoru
+- Aksiyon Planı Üretimi
+- Cloud / Platform Radarı
+- AI / Teknoloji Radarı
+- Fikir Sinyalleri
+- Yönetici İçgörüsü
+- Speaking Practice
+- Günlük Ayet
+- Günün Sözü
+- Kitap Önerisi
+
+---
+
+## 📊 Günlük Brifing Yapısı
 
 1. Günün Özeti  
 2. Global Manşetler  
@@ -38,35 +55,45 @@ Bu proje, her gün tek mesajda şu alanları özetleyen bir briefing üretir:
 6. AI / Teknoloji Radarı  
 7. Speaking Practice  
 8. Kitap Önerisi  
-9. Günlük Yansıma (Ayet)  
+9. Günlük Yansıma  
 10. Günün Sözü  
 11. Karar İçgörüsü  
 12. En Yüksek Öncelik  
 13. Aksiyon Planı  
 14. Yönetici İçgörüsü  
 
-## Yapılandırma
+---
 
-`config.json` üzerinden aşağıdaki alanlar yönetilir:
-
-- şehir
-- dil
-- açık / kapalı bölümler
-- reflection ayarları
-
-## Çalıştırma
+## 🚀 Çalıştırma
 
 ```bash
 python3 morning_brief.py
-
-## Notlar
-
-- Ana çalışma dosyası: `morning_brief.py`
-- Yedekler: `archive/`
-- İngilizce ana dokümantasyon: `README.md`
-- Türkçe dokümantasyon: `README_TR.md`
-- `brain.md` sadece local kullanım içindir, repo’ya push edilmez
-
-## Hedef
-
-Bu proje, sabah hızlı okunabilir, aksiyon odaklı ve yönetici seviyesinde bir briefing üretmek için tasarlanmıştır.
+OpenAI API (Opsiyonel)
+OpenAI API anahtarı opsiyoneldir.
+PulseAI iki modda çalışır:
+AI Mode
+→ daha güçlü içgörü
+→ daha iyi öneriler
+→ daha dinamik briefing
+Fallback Mode
+→ AI olmadan da çalışır
+→ built-in karar mantığı kullanır
+AI aktif etmek için:
+Bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+🧩 Özellikler
+Türkçe haber kaynakları
+spam / ihale filtreleme
+tekrar eden haberleri kaldırma
+cloud ve AI ayrımı
+yönetici odaklı çıktı
+Telegram uyumlu markdown
+config.json ile kontrol
+TR / EN hibrit destek
+🎯 Amaç
+PulseAI, her sabah:
+gündemi sadeleştirmek
+öncelik belirlemek
+aksiyon üretmek
+karar almayı hızlandırmak
+için tasarlanmıştır. EOF
