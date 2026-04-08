@@ -1,71 +1,63 @@
-# Morning Briefing Bot
+# PulseAI
 
-Telegram için Türkçe yönetici brifingi üreten otomatik briefing bot.
+AI-powered decision & action engine
 
-## Özellikler
+---
 
-- 14 bölümlü sabit briefing yapısı
-- Türkçe haber kaynakları
-- Cloud / AI radar
-- Fikir sinyalleri üretimi
-- Executive karar içgörüsü
-- Günlük ayet (TR)
-- Günün sözü (TR)
-- Speaking practice
-- Kitap önerisi
-- Spam haber filtreleme
-- Bölümler arası tekrar engelleme
-- Telegram markdown output
+## 🎯 What is PulseAI?
 
-## Bölümler
+PulseAI is not a news bot.
 
-1. Günün Özeti  
-2. Global Manşetler  
-3. Piyasa Özeti  
-4. Bulut / Platform Radarı  
-5. Fikir Sinyalleri  
-6. AI / Teknoloji Radarı  
-7. Speaking Practice  
-8. Kitap Önerisi  
-9. Günlük Yansıma (Ayet)  
-10. Günün Sözü  
-11. Karar İçgörüsü  
-12. En Yüksek Öncelik  
-13. Aksiyon Planı  
-14. Yönetici İçgörüsü  
+It is a **daily decision system** that transforms information into:
 
-## Kaynaklar
+- Insight
+- Priority
+- Action
+- Opportunity
 
-### Haber
-- AA
-- TRT Haber
-- BBC Türkçe
+---
 
-### Teknoloji
-- Webrazzi
-- Donanım Haber
-- CIO Türkiye
+## 🔥 Example Output
 
-### Ekonomi
-- BloombergHT
-- Ekonomim
+🔥 Top Priority  
+Priority Score: 20  
+Priority Level: High  
 
-## Filtreler
+⚡ Action Plan  
+- Clarify 1 critical risk  
+- Close 1 urgent decision today  
+- Eliminate 1 distraction  
 
-Sistem otomatik olarak şunları filtreler:
+---
 
-- ihale
-- hizmeti alınacaktır
-- satın alma
-- ilan
-- duyuru
-- teklif
+## 🧠 Core Capabilities
 
-## Deduplicate
+- Decision Insight
+- Priority Engine
+- Action Plan
+- Cloud / Platform Radar
+- Idea Signals
+- English Booster
+- Executive Insight
 
-Cloud ve AI bölümleri arasında tekrar eden haberler otomatik kaldırılır.
+---
 
-## Çalıştırma
+## 🚀 Run
+
+python3 morning_brief.py
+
+---
+
+## OpenAI API
+
+OpenAI API key is optional.
+
+PulseAI works in two modes:
+
+- **AI mode** → richer insights, better recommendations, more dynamic outputs
+- **Fallback mode** → still works without AI, using built-in smart logic
+
+To enable AI, set your own API key:
 
 ```bash
-python3 morning_brief.py
+export OPENAI_API_KEY="YOUR_API_KEY"
