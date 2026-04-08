@@ -61,3 +61,14 @@ To enable AI, set your own API key:
 
 ```bash
 export OPENAI_API_KEY="YOUR_API_KEY"
+
+---
+
+## 🗺 Roadmap
+
+PulseAI is evolving from a daily briefing bot into a full decision engine.
+
+See full roadmap here:
+
+ROADMAP.md
+
