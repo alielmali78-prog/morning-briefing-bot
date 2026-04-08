@@ -206,7 +206,7 @@ brain.md
 
 PulseAI:
 
-gürültüyü azaltır  
+gündemi sadeleştirir  
 öncelik çıkarır  
 aksiyon üretir  
 karar hızlandırır  
