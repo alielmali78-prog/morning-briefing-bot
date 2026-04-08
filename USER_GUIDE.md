@@ -1,131 +1,328 @@
-# PulseAI — Quick Start Guide
+# PulseAI User Guide
 
-Get started in 5 minutes.
+This document explains how to install, configure, and run PulseAI step by step.
 
----
+PulseAI is a daily executive briefing system that collects information and converts it into:
 
-## 🚀 What is PulseAI?
-
-PulseAI is a daily decision system.
-
-It transforms global information into:
 - Insight
 - Priority
 - Action
+- Opportunity
 
-Instead of reading news, you get **what to focus on today**.
+The output is delivered as a structured Telegram briefing.
 
----
+--------------------------------------------------
 
-## ⚙️ 1. Requirements
+# 1. System Requirements
 
-- Python 3
-- Internet connection
-- Telegram account
+PulseAI works best on Linux.
+
+Recommended environments:
+
+- Fedora
+- Red Hat Enterprise Linux (RHEL)
+- Rocky Linux / AlmaLinux
+- Ubuntu / Debian
+
+Required:
+
+- Python 3.10+
+- Internet access
+- Telegram bot token
+- Telegram chat ID
 
 Optional:
-- OpenAI API key (for richer insights)
 
----
+- OpenAI API key
 
-## 📦 2. Installation
+--------------------------------------------------
 
-```bash
-git clone https://github.com/alielmali78-prog/morning-briefing-bot.git
-cd morning-briefing-bot
-pip install requests feedparser
-##
-3. Setup Environment
+# 2. Language Support
 
-Set your Telegram credentials:
-export TG_TOKEN="YOUR_BOT_TOKEN"
+PulseAI supports two language modes:
+
+TR  
+EN  
+
+Set language in config.json:
+
+{
+  "language": "TR"
+}
+
+TR = Turkish briefing  
+EN = English briefing  
+
+--------------------------------------------------
+
+# 3. Windows Users
+
+PulseAI is designed for Linux.
+
+If you use Windows, the recommended solution is WSL.
+
+WSL = Windows Subsystem for Linux
+
+This allows running Linux inside Windows.
+
+Recommended steps:
+
+Install WSL:
+
+wsl --install
+
+Reboot Windows
+
+Install Ubuntu inside WSL
+
+Open Ubuntu terminal
+
+Install Python:
+
+sudo apt update
+sudo apt install python3 python3-pip
+
+Clone project and run normally.
+
+This is the most stable Windows setup.
+
+Native Windows is possible but not recommended.
+
+Issues may include:
+
+environment variables  
+cron scheduling  
+shell differences  
+path handling  
+
+WSL solves these.
+
+--------------------------------------------------
+
+# 4. Project Structure
+
+Main files:
+
+morning_brief.py     → main script  
+config.json          → configuration  
+README.md            → English product doc  
+README_TR.md         → Turkish product doc  
+USER_GUIDE.md        → English guide  
+USER_GUIDE_TR.md     → Turkish guide  
+archive/             → backups  
+
+--------------------------------------------------
+
+# 5. Install Dependencies
+
+Install Python packages:
+
+pip install -r requirements.txt
+
+or
+
+pip3 install -r requirements.txt
+
+--------------------------------------------------
+
+# 6. Configure Telegram
+
+Set Telegram variables:
+
+export TG_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
 export TG_CHAT_ID="YOUR_CHAT_ID"
 
+Persist variables:
 
-4. Create Telegram Bot
-Open Telegram
-Search for BotFather
-Create a new bot
-Copy the token
-Send a message to your bot
-▶️ 5. Run PulseAI
+echo 'export TG_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"' >> ~/.bashrc
+echo 'export TG_CHAT_ID="YOUR_CHAT_ID"' >> ~/.bashrc
+
+source ~/.bashrc
+
+--------------------------------------------------
+
+# 7. OpenAI Configuration (Optional)
+
+PulseAI works in two modes:
+
+AI Mode  
+Fallback Mode  
+
+Enable AI mode:
+
+export OPENAI_API_KEY="YOUR_API_KEY"
+
+Without API key PulseAI still works.
+
+--------------------------------------------------
+
+# 8. Configuration File
+
+Edit config.json
+
+Example:
+
+{
+  "city": "Istanbul",
+  "language": "TR",
+  "sections": {
+    "weather": true,
+    "summary": true,
+    "global_headlines": true,
+    "market_snapshot": true,
+    "cloud_platform_radar": true,
+    "idea_signals": true,
+    "ai_tech_radar": true,
+    "speaking_practice": true,
+    "book_recommendation": true,
+    "decision_insight": true
+  }
+}
+
+--------------------------------------------------
+
+# 9. Briefing Structure
+
+PulseAI generates 14 sections:
+
+1 Summary  
+2 Global Headlines  
+3 Market Snapshot  
+4 Cloud / Platform Radar  
+5 Idea Signals  
+6 AI / Technology Radar  
+7 Speaking Practice  
+8 Book Recommendation  
+9 Daily Reflection  
+10 Daily Quote  
+11 Decision Insight  
+12 Top Priority  
+13 Action Plan  
+14 Executive Insight  
+
+--------------------------------------------------
+
+# 10. Run PulseAI
+
+Manual run:
+
 python3 morning_brief.py
 
-You will receive a daily briefing message in Telegram.
+Expected:
 
-🧠 6. How to Use
+news collected  
+briefing generated  
+telegram sent  
 
-Focus on these sections:
+--------------------------------------------------
 
-🔥 Top Priority
+# 11. Validate Script
 
-Your most important focus today
+python3 -m py_compile morning_brief.py
 
-⚡ Action Plan
+If no output → OK
 
-What you should do today
+--------------------------------------------------
 
-🧠 Decision Insight
+# 12. Cron Automation
 
-Context and reasoning
+Open cron:
 
-📈 7. Example Daily Flow
+crontab -e
 
-Morning:
+Run every day 08:00:
 
-Read Top Priority
-Pick 1 action
+0 8 * * * /usr/bin/python3 /home/USER/morning-briefing-bot/morning_brief.py
 
-During the day:
+Example 06:30:
 
-Execute that action
-🔄 8. Automation (Optional)
+30 6 * * * /usr/bin/python3 /home/USER/morning-briefing-bot/morning_brief.py
 
-Run automatically every morning using cron:
+--------------------------------------------------
 
-30 5 * * * python3 /path/to/morning_brief.py
-❗ Troubleshooting
-No Telegram message
-Check TG_TOKEN
-Check TG_CHAT_ID
-AI not working
-Check OPENAI_API_KEY
-API quota may be exceeded
-Script runs but content is basic
-System is running in fallback mode (normal)
-🧠 Final Advice
+# 13. Cron Wrapper Script (Recommended)
 
-Do not read everything.
+Create run_briefing.sh
 
-Focus → Decide → Act
-
-EOF
-
-
-
-
----
-
-## 🔐 OpenAI API Key
-
-PulseAI can optionally use OpenAI for richer insights.
-
-Each user must provide their own API key.
-
-### Set your API key
-
-```bash
+#!/bin/bash
+export TG_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
+export TG_CHAT_ID="YOUR_CHAT_ID"
 export OPENAI_API_KEY="YOUR_API_KEY"
-What happens without an API key?
+/usr/bin/python3 /home/USER/morning-briefing-bot/morning_brief.py
 
-If no API key is provided, PulseAI will still run.
+Make executable:
 
-In that case, it works in fallback mode:
+chmod +x run_briefing.sh
 
-no advanced AI generation
-built-in smart logic is used instead
-the system remains usable and stable
-Important
-Do not hardcode your API key into the script
-Do not commit your API key to GitHub
-Do not share your API key with others
+Cron:
+
+0 8 * * * /home/USER/morning-briefing-bot/run_briefing.sh
+
+--------------------------------------------------
+
+# 14. Troubleshooting
+
+No Telegram message:
+
+check token  
+check chat id  
+check internet  
+check bot started  
+
+AI not working:
+
+check OPENAI_API_KEY  
+check quota  
+
+Cron not working:
+
+use wrapper script  
+
+Windows problems:
+
+use WSL  
+
+--------------------------------------------------
+
+# 15. Backup Policy
+
+Active file:
+
+morning_brief.py
+
+Backups:
+
+archive/
+
+Local only:
+
+brain.md
+
+--------------------------------------------------
+
+# 16. Recommended Workflow
+
+1 edit config  
+2 compile check  
+3 run manually  
+4 confirm telegram  
+5 add cron  
+
+Example:
+
+python3 -m py_compile morning_brief.py
+python3 morning_brief.py
+crontab -e
+
+--------------------------------------------------
+
+# 17. Purpose
+
+PulseAI is designed to:
+
+simplify information  
+identify priority  
+produce action  
+reduce noise  
+accelerate decision making  
+
