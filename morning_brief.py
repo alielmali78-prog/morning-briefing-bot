@@ -1,4 +1,31 @@
 
+
+def is_valid_news(title):
+    blacklist = [
+        "HİZMETİ ALINACAKTIR",
+        "hizmeti alınacaktır",
+        "İHALE",
+        "ihale",
+        "duyuru",
+        "ilan",
+        "teklif",
+        "satın alma"
+    ]
+
+    for b in blacklist:
+        if b in title:
+            return False
+
+    return True
+
+
+
+def deduplicate_news(primary, secondary):
+    if not primary:
+        return secondary
+    return [x for x in secondary if x not in primary]
+
+
 TR_CLOUD_SOURCES = [
     "https://webrazzi.com/feed/",
     "https://www.cio.com.tr/feed/",
@@ -952,7 +979,7 @@ def build_action_engine(aein_text, top_priority):
 # ---------------- NEWS ----------------
 def get_news(url, n=3):
     feed = feedparser.parse(url)
-    return [entry.title for entry in feed.entries[:n] if getattr(entry, "title", "").strip()]
+    return [entry.title for entry in feed.entries[:n] if getattr(entry, "title", "").strip() and is_valid_news(entry.title)]
 
 
 def collect_news():
@@ -1065,7 +1092,7 @@ def build_daily_briefing(news, weather):
             msg.append("*6) AI / Teknoloji Radarı*")
         else:
             msg.append("*5) AI / Tech Radar*")
-        msg.append(bullets(tech_news))
+        msg.append(bullets(deduplicate_news(cloud_platform_news, tech_news)))
         msg.append("")
 
     if sections.get("english_booster", False):

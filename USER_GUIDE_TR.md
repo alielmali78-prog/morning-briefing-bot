@@ -97,13 +97,6 @@ archive/ → yedekler
 
 --------------------------------------------------
 
-# 5. Kurulum
-
-pip install -r requirements.txt
-
-veya
-
-pip3 install -r requirements.txt
 
 --------------------------------------------------
 
@@ -200,4 +193,21 @@ archive/
 Local-only dosya (GitHub'a push edilmez):
 
 brain.md
+
+
+
+- requests → API çağrıları için
+- feedparser → RSS haberlerini okumak için
+
+
+# 5. Kurulum
+
+Gerekli Python kütüphanelerini yüklemek için:
+
+pip install -r requirements.txt
+
+Bu dosya proje için gerekli paketleri içerir:
+
+- requests → API çağrıları için
+- feedparser → RSS haberlerini okumak için
 
