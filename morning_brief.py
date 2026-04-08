@@ -25,8 +25,76 @@ TR_NEWS_SOURCES = {
 
 
 def tr_translate(text, lang):
+    if not text:
+        return ""
+
     if lang != "TR":
         return text
+
+    pairs = {
+        "Theme:": "Ana tema:",
+        "Risk:": "Risk:",
+        "Opportunity:": "Fırsat:",
+        "Recommendation:": "Öneri:",
+        "Decision:": "Karar:",
+        "Score:": "Skor:",
+        "Revenue Impact": "Gelir Etkisi",
+        "Execution Ease": "Uygulama Kolaylığı",
+        "Strategic Fit": "Stratejik Uyum",
+        "Urgency": "Aciliyet",
+        "Today's Recommendation": "Bugün için öneri",
+        "- Do:": "- Yap:",
+        "- Watch:": "- Dikkat et:",
+        "- Track:": "- İzle:",
+        "Focus:": "Odak:",
+        "Priority Score": "Öncelik Skoru",
+        "Priority Level": "Öncelik Seviyesi",
+        "Technology-led developments are creating a strong strategic positioning moment.": "Teknoloji odaklı gelişmeler güçlü bir stratejik konumlanma anı oluşturuyor.",
+        "Poor prioritization could waste a valuable opportunity window.": "Yanlış önceliklendirme değerli bir fırsat penceresini boşa harcayabilir.",
+        "Operational efficiency and focused execution can create advantage.": "Operasyonel verimlilik ve odaklı execution avantaj yaratabilir.",
+        "Map AI and cloud developments directly to high-impact business outcomes.": "AI ve cloud gelişmelerini yüksek etkili iş sonuçlarıyla doğrudan eşleştir.",
+        "Turn one high strategic-fit topic into concrete action today.": "Stratejik uyumu en yüksek tek başlığı bugün somut aksiyona çevir.",
+        "Stay focused on the one topic with the highest strategic fit.": "Stratejik uyumu en yüksek tek konuya odaklan.",
+        "Geopolitical risks are directly affecting technology and markets.": "Jeopolitik riskler teknoloji ve piyasaları doğrudan etkiliyor.",
+        "Reactive decision-making and energy-cost pressure.": "Reaktif karar alma ve enerji maliyeti baskısı.",
+        "The right positioning creates advantage during uncertainty.": "Belirsizlik dönemlerinde doğru konumlanma avantaj yaratır.",
+        "Simplify the agenda and choose one main objective.": "Gündemi sadeleştir ve tek bir ana hedef seç.",
+        "Avoid spreading attention across low-value tasks.": "Düşük değerli işlere dağılma.",
+        "The intersection of AI, cloud, and market dynamics.": "AI, cloud ve piyasa dinamiklerinin kesişimi.",
+        "- Clarify 1 critical risk": "- 1 kritik riski netleştir",
+        "- Close 1 urgent decision today": "- 1 acil kararı bugün kapat",
+        "- Eliminate or postpone 1 distraction": "- 1 dikkat dağıtan konuyu ertele veya kaldır",
+        "Telco cloud is growing -> Opportunity for a telco-specific PaaS / platform solution": "Telco cloud büyüyor -> Telco'ya özel PaaS / platform çözümü fırsatı",
+        "Cloud trends -> Evaluate general platform and managed service opportunities": "Cloud trendleri artıyor -> platform ve managed service fırsatlarını değerlendir",
+        "Why today:": "Neden bugün:"
+    }
+
+    for k, v in pairs.items():
+        text = text.replace(k, v)
+
+    return text
+
+
+
+
+def tr_post_process(text):
+    replacements = {
+        "Makro baskılar ve iş öncelikleri birlikte değerlendirilmelidir.": "Makro baskılar ve iş öncelikleri birlikte değerlendirilmelidir.",
+        "Parçalı bir gündem odak kaybına yol açabilir.": "Parçalı bir gündem odak kaybına yol açabilir.",
+        "Operational efficiency and focused execution can create advantage.": "Operasyonel verimlilik ve odaklı execution avantaj yaratabilir.",
+        "Gündemi gelir, teslimat ve stratejik uyum filtreleriyle daralt.": "Gündemi gelir, teslimat ve stratejik uyum filtreleriyle daralt.",
+        "Bugün en yüksek iş etkisine sahip tek konuyu ilerlet.": "Bugün en yüksek iş etkisine sahip tek konuyu ilerlet.",
+        "AI and cloud investments are at the center of competition.": "AI ve bulut yatırımları rekabetin merkezinde yer alıyor.",
+        "Misallocation of investment.": "Yanlış yatırım dağılımı riski.",
+        "Efficiency and scalability advantage.": "Verimlilik ve ölçeklenebilirlik avantajı.",
+        "Macro conditions and technology dynamics are moving together.": "Makro koşullar ve teknoloji dinamikleri birlikte hareket ediyor.",
+        "Loss of focus.": "Odak kaybı."
+    }
+
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+
+    return text
 
     pairs = {
         "Theme:": "Ana tema:",
@@ -278,8 +346,8 @@ def build_smart_aein_fallback(news):
         theme = "Technology-led developments are creating a strong strategic positioning moment."
         risk = "Poor prioritization could waste a valuable opportunity window."
     else:
-        theme = "Macro pressure and business priorities should be read together."
-        risk = "A fragmented agenda can create loss of focus."
+        theme = "Makro baskılar ve iş öncelikleri birlikte değerlendirilmelidir."
+        risk = "Parçalı bir gündem odak kaybına yol açabilir."
 
     if strategic >= 8 and revenue >= 7:
         opportunity = "AI, cloud, and platform trends are creating both strategic and commercial opportunity."
@@ -295,8 +363,8 @@ def build_smart_aein_fallback(news):
         recommendation = "Map AI and cloud developments directly to high-impact business outcomes."
         decision = "Turn one high strategic-fit topic into concrete action today."
     else:
-        recommendation = "Narrow the agenda using revenue, delivery, and strategic-fit filters."
-        decision = "Advance the one topic with the highest business impact today."
+        recommendation = "Gündemi gelir, teslimat ve stratejik uyum filtreleriyle daralt."
+        decision = "Bugün en yüksek iş etkisine sahip tek konuyu ilerlet."
 
     return (
         f"Theme: {theme}\n"
@@ -326,7 +394,7 @@ def build_smart_exec_fallback(news):
     else:
         theme = "Macro conditions and technology dynamics are moving together."
         risk = "Loss of focus."
-        opportunity = "Operational efficiency."
+        opportunity = "Operasyonel verimlilik."
 
     return (
         f"Theme: {theme}\n"
@@ -931,6 +999,7 @@ def build_daily_briefing(news, weather):
     top_priority = build_top_priority_from_scores(decision_text)
     action_plan = build_action_engine(decision_text, top_priority)
     exec_text = generate_ai_insight(news)
+    exec_text = tr_post_process(exec_text)
     english_text = generate_english_booster(news)
     speaking = generate_speaking_prompt(news)
 
