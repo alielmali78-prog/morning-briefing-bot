@@ -113,15 +113,6 @@ archive/             → backups
 
 --------------------------------------------------
 
-# 5. Install Dependencies
-
-Install Python packages:
-
-pip install -r requirements.txt
-
-or
-
-pip3 install -r requirements.txt
 
 --------------------------------------------------
 
@@ -325,4 +316,18 @@ identify priority
 produce action  
 reduce noise  
 accelerate decision making  
+
+
+# 5. Install Dependencies
+
+Install required Python packages:
+
+pip install -r requirements.txt
+
+The requirements.txt file contains the dependencies needed to run PulseAI:
+
+- requests → used for API calls (weather, AI, HTTP requests)
+- feedparser → used to read RSS news feeds
+
+These packages are minimal and keep the project lightweight.
 
