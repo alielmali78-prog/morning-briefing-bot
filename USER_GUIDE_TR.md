@@ -1,15 +1,15 @@
 # PulseAI Kullanım Kılavuzu
 
-Bu doküman PulseAI'nin nasıl kurulacağını ve çalıştırılacağını adım adım açıklar.
+Bu doküman PulseAI'nin nasıl kurulacağını, yapılandırılacağını ve çalıştırılacağını adım adım açıklar.
 
-PulseAI, bilgiyi aşağıdakilere dönüştüren günlük karar sistemidir:
+PulseAI, bilgiyi aşağıdakilere dönüştüren günlük bir karar sistemidir:
 
 - İçgörü
 - Öncelik
 - Aksiyon
 - Fırsat
 
-Çıktı Telegram üzerinden gönderilir.
+Çıktı Telegram üzerinden yapılandırılmış bir briefing olarak gönderilir.
 
 --------------------------------------------------
 
@@ -20,21 +20,20 @@ PulseAI Linux üzerinde en stabil çalışır.
 Önerilen sistemler:
 
 - Fedora
-- Red Hat
-- Rocky Linux
-- Ubuntu
-- Debian
+- Red Hat Enterprise Linux (RHEL)
+- Rocky Linux / AlmaLinux
+- Ubuntu / Debian
 
 Gerekenler:
 
 - Python 3.10+
-- internet erişimi
+- İnternet erişimi
 - Telegram bot token
 - Telegram chat id
 
 Opsiyonel:
 
-- OpenAI API key
+- OpenAI API anahtarı
 
 --------------------------------------------------
 
@@ -47,7 +46,9 @@ EN
 
 config.json içinde ayarlanır:
 
-"language": "TR"
+{
+  "language": "TR"
+}
 
 TR = Türkçe briefing  
 EN = İngilizce briefing  
@@ -60,7 +61,7 @@ PulseAI Linux için tasarlanmıştır.
 
 Windows için önerilen çözüm:
 
-WSL kullanmak.
+WSL kullanmaktır.
 
 WSL = Windows içinde Linux çalıştırma.
 
@@ -68,93 +69,113 @@ Kurulum:
 
 wsl --install
 
-Restart
+Windows yeniden başlatılır.
 
-Ubuntu aç
+Ubuntu kurulur.
 
-Python kur:
+WSL içinde Python kurulur:
 
 sudo apt update
 sudo apt install python3 python3-pip
 
-Projeyi çalıştır.
+Proje normal şekilde çalıştırılır.
 
 Bu en stabil yöntemdir.
-
-Native Windows mümkündür fakat önerilmez.
 
 --------------------------------------------------
 
 # 4. Proje Yapısı
 
-morning_brief.py → ana script  
-config.json → konfigürasyon  
-README.md → İngilizce doküman  
-README_TR.md → Türkçe doküman  
-USER_GUIDE.md → İngilizce kullanım  
-USER_GUIDE_TR.md → Türkçe kullanım  
-archive/ → yedekler  
+Ana dosyalar:
+
+morning_brief.py     → ana script  
+config.json          → konfigürasyon  
+README.md            → İngilizce doküman  
+README_TR.md         → Türkçe doküman  
+USER_GUIDE.md        → İngilizce kullanım kılavuzu  
+USER_GUIDE_TR.md     → Türkçe kullanım kılavuzu  
+archive/             → yedekler  
 
 --------------------------------------------------
 
+# 5. Kurulum
+
+Gerekli Python paketlerini yüklemek için:
+
+pip install -r requirements.txt
+
+veya
+
+pip3 install -r requirements.txt
+
+requirements.txt dosyası proje için gerekli paketleri içerir:
+
+- requests → API çağrıları için  
+- feedparser → RSS haberlerini okumak için  
 
 --------------------------------------------------
 
 # 6. Telegram Ayarı
 
-export TG_TOKEN="TOKEN"
-export TG_CHAT_ID="CHAT_ID"
+Telegram değişkenlerini ayarla:
 
-kalıcı yapmak için:
+export TG_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
+export TG_CHAT_ID="YOUR_CHAT_ID"
 
-echo 'export TG_TOKEN="TOKEN"' >> ~/.bashrc
-echo 'export TG_CHAT_ID="CHAT_ID"' >> ~/.bashrc
+Kalıcı yapmak için:
+
+echo 'export TG_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"' >> ~/.bashrc
+echo 'export TG_CHAT_ID="YOUR_CHAT_ID"' >> ~/.bashrc
 
 source ~/.bashrc
 
 --------------------------------------------------
 
-# 7. OpenAI (Opsiyonel)
+# 7. OpenAI Ayarı (Opsiyonel)
 
-İki mod vardır:
+PulseAI iki modda çalışır:
 
-AI mode  
-Fallback mode  
+AI Mode  
+Fallback Mode  
 
-Aktif etmek:
+AI aktif etmek için:
 
-export OPENAI_API_KEY="KEY"
+export OPENAI_API_KEY="YOUR_API_KEY"
 
-Anahtar yoksa sistem fallback ile çalışır.
+API anahtarı yoksa sistem fallback modda çalışır.
 
 --------------------------------------------------
 
-# 8. config.json
+# 8. Konfigürasyon Dosyası
+
+config.json düzenlenir.
 
 Örnek:
 
 {
- "city":"Istanbul",
- "language":"TR"
+  "city": "Istanbul",
+  "language": "TR"
 }
 
 --------------------------------------------------
 
-# 9. Bölümler
+# 9. Briefing Yapısı
+
+PulseAI 14 bölüm üretir:
 
 1 Günün Özeti  
 2 Global Manşetler  
 3 Piyasa Özeti  
-4 Cloud Radar  
+4 Cloud / Platform Radarı  
 5 Fikir Sinyalleri  
-6 AI Radar  
-7 Speaking  
-8 Kitap  
-9 Ayet  
-10 Söz  
+6 AI / Teknoloji Radarı  
+7 Speaking Practice  
+8 Kitap Önerisi  
+9 Günlük Yansıma  
+10 Günün Sözü  
 11 Karar İçgörüsü  
-12 Öncelik  
-13 Aksiyon  
+12 En Yüksek Öncelik  
+13 Aksiyon Planı  
 14 Yönetici İçgörüsü  
 
 --------------------------------------------------
@@ -165,22 +186,39 @@ python3 morning_brief.py
 
 --------------------------------------------------
 
-# 11. Compile kontrol
+# 11. Script Kontrol
 
 python3 -m py_compile morning_brief.py
 
 --------------------------------------------------
 
-# 12. Cron
+# 12. Cron Otomasyonu
 
 crontab -e
 
-0 8 * * * python3 /path/morning_brief.py
+Örnek:
+
+0 8 * * * /usr/bin/python3 /home/USER/morning-briefing-bot/morning_brief.py
 
 --------------------------------------------------
 
+# 13. Cron Wrapper Script
 
-# 13. Backup
+run_briefing.sh oluştur:
+
+#!/bin/bash
+export TG_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
+export TG_CHAT_ID="YOUR_CHAT_ID"
+export OPENAI_API_KEY="YOUR_API_KEY"
+/usr/bin/python3 /home/USER/morning-briefing-bot/morning_brief.py
+
+Çalıştırılabilir yap:
+
+chmod +x run_briefing.sh
+
+--------------------------------------------------
+
+# 14. Yedekleme Politikası
 
 Aktif dosya:
 
@@ -190,24 +228,43 @@ Yedekler:
 
 archive/
 
-Local-only dosya (GitHub'a push edilmez):
+Sadece local (GitHub'a push edilmez):
 
 brain.md
 
+--------------------------------------------------
 
+# 15. Önerilen Akış
 
-- requests → API çağrıları için
-- feedparser → RSS haberlerini okumak için
+1 config düzenle  
+2 compile kontrol  
+3 manuel çalıştır  
+4 telegram kontrol  
+5 cron ekle  
 
+--------------------------------------------------
 
-# 5. Kurulum
+# 16. Notlar
 
-Gerekli Python kütüphanelerini yüklemek için:
+PulseAI fallback modda da çalışır.
 
-pip install -r requirements.txt
+AI yoksa sistem durmaz.
 
-Bu dosya proje için gerekli paketleri içerir:
+Telegram gönderimi zorunludur.
 
-- requests → API çağrıları için
-- feedparser → RSS haberlerini okumak için
+Linux önerilir.
+
+Windows için WSL önerilir.
+
+--------------------------------------------------
+
+# 17. Amaç
+
+PulseAI şu amaçlarla tasarlanmıştır:
+
+- gündemi sadeleştirmek
+- öncelik belirlemek
+- aksiyon üretmek
+- gereksiz bilgiyi filtrelemek
+- karar almayı hızlandırmak
 
